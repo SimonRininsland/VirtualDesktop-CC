@@ -1,0 +1,60 @@
+\documentclass[a4, 12pt]{article}
+
+\usepackage[german]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+
+\usepackage{amsmath}
+\usepackage{blindtext}
+
+\linespread{1.5}
+\geometry{footskip=40pt}
+\setcounter{page}{2}
+
+\begin{document}
+
+\begin{titlepage}
+    \pagestyle{fancyplain} 
+    \fancyfoot[C]{} 
+    \title{Thema}
+    \date{Year\\ Month}
+    \author{Name\\ Faculty}
+    \maketitle
+    \begin{abstract}
+        \blindtext\cite{Joa10:1}
+    \end{abstract}
+\end{titlepage}
+
+\pagestyle{fancyplain} 
+\fancypagestyle{plain}{}
+\fancyhead[L]{Thema}
+\fancyhead[R]{}
+\fancyfoot[L]{Name} 
+\fancyfoot[C]{} 
+\fancyfoot[R]{Seite \thepage} 
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{1pt}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\section{Überschrift}
+\blindtext
+
+\subsection{Unterüberschrift}
+\blindtext
+
+\subsubsection{Unterunterüberschrift}
+\blindtext
+
+\section{Nächste Überschrift}
+\blindmathpaper
+
+\clearpage
+\bibliography{documentation}
+\bibliographystyle{apalike}
+
+\end{document}
