@@ -1,8 +1,6 @@
 # VirtualDesktop-CC
 
 ## Elastic-Beanstalk Deployment
-### Setup in AWS
-#### Credetnials for the EB-CLI-Tool
 ### LocalDeploy Pre-Requirements
 - ElasticBeanstalk Deployment CLI Tool
     - `` pip install awsebcli ``
