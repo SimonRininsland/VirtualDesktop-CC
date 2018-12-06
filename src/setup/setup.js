@@ -1,14 +1,13 @@
 var AWS = require('aws-sdk');
 AWS.config.update({
-    accessKeyId: 'not-important',
-    secretAccessKey: 'not-important',  
-    region: 'local',
-    endpoint: new AWS.Endpoint('http://localhost:8000')
+	accessKeyId: 'XXX',
+    secretAccessKey: 'XXX',
+	region: 'eu-central-1'
 });
-var dynamodb = new AWS.DynamoDB();
+var dynamodb = new AWS.DynamoDB({endpoint: 'https://dynamodb.eu-central-1.amazonaws.com'});
+var s3 = new AWS.S3({endpoint: 'https://s3.eu-central-1.amazonaws.com'});
 
 var window = {
-	BillingMode: "PAY_PER_REQUEST",
 	AttributeDefinitions: [
 		{
 			AttributeName: "Window", 
@@ -29,7 +28,6 @@ var window = {
 };
 
 var windowContent = {
-	BillingMode: "PAY_PER_REQUEST",
 	AttributeDefinitions: [
 		{
 			AttributeName: "File", 
@@ -59,6 +57,11 @@ dynamodb.createTable(windowContent, function(err, data) {
 	else console.log("Success", data);
 });
 
+s3.createBucket({Bucket: "filebucketvirtualdesktop"}, function(err, data) {
+	if (err) console.log(err, err.stack);
+	else console.log(data);
+});
+
 // SNIPETS
 
 /* dynamodb.listTables({}, function(err, data) {
@@ -80,3 +83,8 @@ dynamodb.createTable(windowContent, function(err, data) {
 	if (err) console.log(err, err.stack);
 	else console.log(data);
 }) */
+
+/* s3.createBucket({Bucket: "filebucketvirtualdesktop"}, function(err, data) {
+	if (err) console.log(err, err.stack);
+	else console.log(data);
+}); */

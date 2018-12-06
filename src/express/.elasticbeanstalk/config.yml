@@ -1,7 +1,11 @@
 branch-defaults:
-  master:
-    environment: null
+  default:
+    environment: VirtualDesktop-env
     group_suffix: null
+environment-defaults:
+  VirtualDesktop-env:
+    branch: null
+    repository: null
 global:
   application_name: VirtualDesktop
   branch: null
@@ -14,5 +18,5 @@ global:
   platform_version: null
   profile: null
   repository: null
-  sc: git
+  sc: null
   workspace_type: Application

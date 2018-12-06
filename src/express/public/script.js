@@ -14,7 +14,7 @@ function ready() {
 
 function upload(file, win) {
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', 'http://localhost:3000/addFile');
+	xhr.open('POST', '/addFile');
 	var formData = new FormData();
 	formData.append('file', file);
 	formData.append('window', win);

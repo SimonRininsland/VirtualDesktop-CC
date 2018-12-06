@@ -1,14 +1,7 @@
 var express = require('express');
 var router = express.Router();
-
-var AWS = require('aws-sdk');
-AWS.config.update({
-    accessKeyId: 'not-important',
-    secretAccessKey: 'not-important',  
-    region: 'local',
-    endpoint: new AWS.Endpoint('http://localhost:8000')
-});
-var dynamodb = new AWS.DynamoDB();
+var AWS = require('./aws-environment');
+AWS.init();
 
 router.get('/', function(req, res, next) {
 	var scan = { 
@@ -16,7 +9,7 @@ router.get('/', function(req, res, next) {
 		ExpressionAttributeNames: {"#F": "File"}, 
 		ProjectionExpression: "#F, FileName, WindowName" 
 	};
-	dynamodb.scan(scan, function(err, data) {
+	AWS.dynamodb.scan(scan, function(err, data) {
 		if (err) { 
 			res.send(JSON.parse('{"status": "error", "description": "internal database error"}'));
 		} else {

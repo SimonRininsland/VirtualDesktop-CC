@@ -1,37 +1,35 @@
 var express = require('express');
 var router = express.Router();
+var AWS = require('./aws-environment');
+AWS.init();
 
-var AWS = require('aws-sdk');
-AWS.config.update({
-    accessKeyId: 'not-important',
-    secretAccessKey: 'not-important',  
-    region: 'local',
-    endpoint: new AWS.Endpoint('http://localhost:8000')
-});
-var dynamodb = new AWS.DynamoDB();
-
-router.get('/', function(req, res, next) {
+router.post('/', function(req, res, next) {
+	var object = {
+		Body: req.files.file.data, 
+		Bucket: "filebucketvirtualdesktop", 
+		Key: req.files.file.md5()
+	};
+	AWS.s3.putObject(object, function(err, data) {
+		if (err) console.log(err, err.stack);
+		else console.log(data);
+	});
 	var put = { 
 		TableName: "WindowContent", 
 		Item: { 
-			"File": {"S": req.query.name}, 
-			"FileName": {"S": req.query.name}, 
-			"WindowName": {"S": "HelloWindow"} 
+			"File": {"S": req.files.file.md5()}, 
+			"FileName": {"S": req.files.file.name}, 
+			"WindowName": {"S": req.body.window} 
 		}
 	};
-	if(req.query.name === undefined) {
-		res.send(JSON.parse('{"status": "error", "description": "param \'name\' required"}'));
+	AWS.dynamodb.putItem(put, function(err, data) {
+		if (err) { 
+			console.log(err);
+			res.send(JSON.parse('{"status": "error", "description": "internal database error"}'));
+		} else { 
+			res.send(JSON.parse('{"status": "ok"}'));
+		}
 		res.end();
-	} else {
-		dynamodb.putItem(put, function(err, data) {
-			if (err) { 
-				res.send(JSON.parse('{"status": "error", "description": "internal database error"}'));
-			} else { 
-				res.send(JSON.parse('{"status": "ok"}'));
-			}
-			res.end();
-		});
-	}
+	});
 });
 
 module.exports = router;

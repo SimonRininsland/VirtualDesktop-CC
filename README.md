@@ -22,5 +22,9 @@
     - Open in default Browser with ``eb open``
     - To see elastic Beans Instance visit: https://eu-central-1.console.aws.amazon.com/elasticbeanstalk/home?region=eu-central-1#/applications
 ### Deployment on AWS
+- Start Env ``eb create --sample VirtualDesktop-env`` 
 - Start Depoloyment with ``eb deploy``
 - When you're done working, terminate with ``eb terminate``
+
+## Deployment Documentation
+- https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
