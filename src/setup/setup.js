@@ -1,7 +1,7 @@
 var AWS = require('aws-sdk');
 AWS.config.update({
-	accessKeyId: 'XXX',
-    secretAccessKey: 'XXX',
+	accessKeyId: 'XXXXX',
+    secretAccessKey: 'XXXXX',
 	region: 'eu-central-1'
 });
 var dynamodb = new AWS.DynamoDB({endpoint: 'https://dynamodb.eu-central-1.amazonaws.com'});
@@ -21,8 +21,8 @@ var window = {
 		}
 	],
 	ProvisionedThroughput: { 
-		ReadCapacityUnits: 5,
-		WriteCapacityUnits: 5
+		ReadCapacityUnits: 1,
+		WriteCapacityUnits: 1
 	},
 	TableName: "Window"
 };
@@ -41,8 +41,8 @@ var windowContent = {
 		}
 	],
 	ProvisionedThroughput: { 
-		ReadCapacityUnits: 5,
-		WriteCapacityUnits: 5
+		ReadCapacityUnits: 1,
+		WriteCapacityUnits: 1
 	},
 	TableName: "WindowContent"
 };
