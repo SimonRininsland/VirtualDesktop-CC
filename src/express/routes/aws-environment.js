@@ -12,7 +12,7 @@ module.exports = {
     s3: new AWS.S3({endpoint: 'https://s3.eu-central-1.amazonaws.com', region: 'eu-central-1'}),
 	cognito: new CognitoExpress({
 		region: "eu-central-1",
-		cognitoUserPoolId: "eu-central-1_LTo2PtYqb",
+		cognitoUserPoolId: process.env.COGNITO_POOL,
 		tokenUse: "access",
 		tokenExpiration: 3600000
 	})

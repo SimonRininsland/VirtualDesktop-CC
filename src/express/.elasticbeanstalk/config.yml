@@ -6,9 +6,6 @@ environment-defaults:
   VirtualDesktop-env:
     branch: null
     repository: null
-  VirtualDesktop-env-simon:
-    branch: null
-    repository: null
 global:
   application_name: VirtualDesktop
   branch: null

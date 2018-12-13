@@ -22,8 +22,8 @@ function upload(file, win) {
 }
 
 var userPool = new AmazonCognitoIdentity.CognitoUserPool({
-	UserPoolId: 'eu-central-1_LTo2PtYqb',
-	ClientId: '1ap805r5jj2e08uhmqvi45ltfr'
+	UserPoolId: 'COGNITO_POOL',
+	ClientId: 'COGNITO_CLIENT'
 });
 	
 function login() {

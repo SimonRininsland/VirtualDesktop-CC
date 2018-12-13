@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 
+// ersetzung von Cognito Pool und User in script.js
+var fs = require('fs')
+fs.readFile('./public/script.js', 'utf8', function (err,data) {
+    if (err) { return console.log(err); }
+    var result = data.replace(/COGNITO_POOL/g, process.env.COGNITO_POOL);
+    result = result.replace(/COGNITO_CLIENT/g, process.env.COGNITO_CLIENT);
+    fs.writeFile('./public/script.js', result, 'utf8', function (err) { if (err) return console.log(err); });
+});
+
 /**
  * Module dependencies.
  */
