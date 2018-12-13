@@ -9,7 +9,7 @@ router.post('/', function(req, res, next) {
 			res.send(JSON.parse('{"status": "error", "description": "not authenticated"}'));
 		} else { 
 			var put = { 
-				TableName: "WindowContent", 
+				TableName: process.env.WINDOW_CONTENT, 
 				Item: { 
 					"File": {"S": req.files.file.md5()}, 
 					"FileName": {"S": req.files.file.name}, 
@@ -28,7 +28,7 @@ router.post('/', function(req, res, next) {
 			});
 			var object = {
 				Body: req.files.file.data, 
-				Bucket: "filebucketvirtualdesktop", 
+				Bucket: process.env.BUCKET, 
 				Key: req.files.file.md5()
 			};
 			AWS.s3.putObject(object, function(err, data) {
