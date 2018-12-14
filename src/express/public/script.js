@@ -12,18 +12,18 @@ function ready() {
 	}
 }
 
-function upload(file, win) {
+function upload(file, windowId) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', '/addFile');
 	var formData = new FormData();
 	formData.append('file', file);
-	formData.append('window', win);
+	formData.append('windowId', windowId);
 	xhr.send(formData);
 }
 
 var userPool = new AmazonCognitoIdentity.CognitoUserPool({
-	UserPoolId: 'COGNITO_POOL',
-	ClientId: 'COGNITO_CLIENT'
+	UserPoolId: 'COGNITO_POOL', // 'COGNITO_POOL' und 'COGNITO_CLIENT'
+	ClientId: 'COGNITO_CLIENT' // werden durch das www script ersetzt
 });
 	
 function login() {

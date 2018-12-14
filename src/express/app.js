@@ -7,6 +7,7 @@ var logger = require('morgan');
 var addFileRouter = require('./routes/addFile');
 var removeFileRouter = require('./routes/removeFile');
 var listFileRouter = require('./routes/listFile');
+var getFileRouter = require('./routes/getFile');
 
 var app = express();
 
@@ -22,5 +23,6 @@ app.use(fileUpload());
 app.use('/addFile', addFileRouter);
 app.use('/removeFile', removeFileRouter);
 app.use('/listFile', listFileRouter);
+app.use('/getFile', getFileRouter);
 
 module.exports = app;

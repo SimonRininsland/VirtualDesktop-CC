@@ -1,7 +1,7 @@
 var AWS = require('aws-sdk');
 AWS.config.update({
-	accessKeyId: 'XXXXX',
-    secretAccessKey: 'XXXXX',
+	accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 	region: 'eu-central-1'
 });
 var dynamodb = new AWS.DynamoDB({endpoint: 'https://dynamodb.eu-central-1.amazonaws.com'});
@@ -10,13 +10,13 @@ var s3 = new AWS.S3({endpoint: 'https://s3.eu-central-1.amazonaws.com'});
 var window = {
 	AttributeDefinitions: [
 		{
-			AttributeName: "Window", 
+			AttributeName: "WindowId", 
 			AttributeType: "S"
 		}
 	], 
 	KeySchema: [
 		{
-			AttributeName: "Window", 
+			AttributeName: "WindowId", 
 			KeyType: "HASH"
 		}
 	],
@@ -30,13 +30,13 @@ var window = {
 var windowContent = {
 	AttributeDefinitions: [
 		{
-			AttributeName: "File", 
+			AttributeName: "FileId", 
 			AttributeType: "S"
 		}
 	], 
 	KeySchema: [
 		{
-			AttributeName: "File", 
+			AttributeName: "FileId", 
 			KeyType: "HASH"
 		}
 	],
@@ -61,7 +61,7 @@ s3.createBucket({Bucket: "filebucketvirtualdesktop"}, function(err, data) {
 	if (err) console.log(err, err.stack);
 	else console.log(data);
 });
-
+ 
 // SNIPETS
 
 /* dynamodb.listTables({}, function(err, data) {
