@@ -22,7 +22,7 @@ function upload(file, windowId) {
 }
 
 var userPool = new AmazonCognitoIdentity.CognitoUserPool({
-	UserPoolId: 'COGNITO_POOL', // 'COGNITO_POOL' und 'COGNITO_CLIENT'
+	UserPoolId: 'COGNITO_POOL', // 'COGNITO_POOL' und 'COGNITO_CLIENT' 
 	ClientId: 'COGNITO_CLIENT' // werden durch das www script ersetzt
 });
 	
