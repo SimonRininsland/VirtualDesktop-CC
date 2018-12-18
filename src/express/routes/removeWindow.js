@@ -3,14 +3,14 @@ var router = express.Router();
 var AWS = require('./aws-environment');
 var VD = require('./virtual-desktop');
 AWS.init();
-
-router.post('/', function(req, res, next) {
+	
+router.get('/', function(req, res, next) {
 	// Überprüfen des nutzer tokens (nutzer eingeloggt?).
 	AWS.cognito.validate(req.cookies.token, function(err, auth) {
 		if(err) {
 			res.send({"status": "error", "description": "authentification failed"});
 		} else {
-			VD.addFile(req.body.windowId, req.files.file.name, req.files.file.data, function(reply) {
+			VD.removeWindow(req.query.windowId, function(reply) {
 				res.send(reply);
 				res.end();
 			});

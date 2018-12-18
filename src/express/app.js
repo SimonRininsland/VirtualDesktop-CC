@@ -8,6 +8,8 @@ var addFileRouter = require('./routes/addFile');
 var removeFileRouter = require('./routes/removeFile');
 var listFileRouter = require('./routes/listFile');
 var getFileRouter = require('./routes/getFile');
+var removeWindow = require('./routes/removeWindow');
+var addWindow = require('./routes/addWindow');
 
 var app = express();
 
@@ -24,5 +26,7 @@ app.use('/addFile', addFileRouter);
 app.use('/removeFile', removeFileRouter);
 app.use('/listFile', listFileRouter);
 app.use('/getFile', getFileRouter);
+app.use('/removeWindow', removeWindow);
+app.use('/addWindow', addWindow);
 
 module.exports = app;

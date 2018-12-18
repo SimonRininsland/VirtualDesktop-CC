@@ -1,28 +1,21 @@
 var express = require('express');
 var router = express.Router();
 var AWS = require('./aws-environment');
+var VD = require('./virtual-desktop');
 AWS.init();
 
 router.get('/', function(req, res, next) {
-	var del = { 
-		TableName: "WindowContent", 
-		Key: { 
-			"File": {"S": req.query.name}, 
+	// Überprüfen des nutzer tokens (nutzer eingeloggt?).
+	AWS.cognito.validate(req.cookies.token, function(err, auth) {
+		if(err) {
+			res.send({"status": "error", "description": "authentification failed"});
+		} else {
+			VD.removeFile(req.query.fileId, function(reply) {
+				res.send(reply);
+				res.end();
+			});
 		}
-	};
-	if(req.query.name === undefined) {
-		res.send(JSON.parse('{"status": "error", "description": "param \'name\' required"}'));
-		res.end();
-	} else {
-		AWS.dynamodb.deleteItem(del, function(err, data) {
-			if (err) { 
-				res.send(JSON.parse('{"status": "error", "description": "internal database error"}'));
-			} else { 
-				res.send(JSON.parse('{"status": "ok"}'));
-			}
-			res.end();
-		});
-	}
+	});
 });
 
 module.exports = router;
