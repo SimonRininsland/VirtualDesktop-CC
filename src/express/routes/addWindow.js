@@ -10,7 +10,7 @@ router.get('/', function(req, res, next) {
 		if(err) {
 			res.send({"status": "error", "description": "authentification failed"});
 		} else {
-			VD.addWindow(req.query.windowId, auth.username, function(reply) {
+			VD.addWindow(auth.username, req.query.windowName, function(reply) {
 				res.send(reply);
 				res.end();
 			});

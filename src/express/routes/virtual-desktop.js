@@ -5,393 +5,483 @@ var AWS = require('./aws-environment');
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
+function permissionsObj(admin, read, write, del) {
+	return {
+		"admin": admin,
+		"read": read,
+		"write": write,
+		"del": del
+	}
+}
+
 function error(type, description, data) {
 	return {
-		"error": {
-			"type": type,
-			"description": description,
-			"data": data
-		} 
-	}
+		"type": type,
+		"description": description,
+		"data": data
+	} 
 }
 
-function reply(result, data, callback) {
+function reply(data) {
 	var ret = {};
-	if(result.errorCount > 0) {
+	if(data.errors.length > 0) {
 		ret.status = "error";
-		result.errors.forEach(function(error) { 
-			if(error.data) {
-				console.log(error.data) 
-				delete error.data; 
-			}
+		data.errors.forEach(function(error) { 
+			delete error.data; 
 		});
-		ret.errors = result.errors;
+		ret.errors = data.errors;
 	} else {
 		ret.status = "ok";
-		ret.data = data;
+		ret.data = data.result;
 	}
-	callback(ret);
+	return ret;
 }
 
-function executePromises(promises, callback) {
-	Promise.all(promises).then(function(values) {
-		var result = {};
-		result.errors = [];
-		result.values = [];
-		result.errorCount = 0;
-		values.forEach(function(value) {
-			if(value && value.error) {
-				result.errorCount++;
-				result.errors.push(value.error);
-				result.values.push(null);
+async function dispatch(tasks, map, callback) {
+	var data = { tasks: tasks, map: map, result: {}, errors: [], propergate: true };
+	while(data.tasks.length != 0 && data.propergate) {
+		var promises = [];
+		for(var i = 0; i < tasks[0].length; i++) {
+			var f = function(resolve, reject) { 
+				this.tasks[0][i](this, () => {
+					resolve();
+				});
+			};
+			promises.push(new Promise(f.bind(data)))
+		}
+		await Promise.all(promises);
+		data.tasks.splice(0, 1);
+	}
+	callback(data);
+} 
+
+function checkParams(dis, done) {
+	Object.keys(dis.map).forEach(function(key) { 
+		if(dis.map[key] === null || dis.map[key] === undefined) {
+			dis.errors.push(error("parametrisation", "missing parameter '" + key + "'.", null));
+			dis.propergate = false;
+		}
+	});
+	done();
+}
+
+function checkPermissions(perm) {
+	var f = function(dis, done) {
+		var owner = dis.map.permissions.owner;
+		var admin = dis.map.permissions.admin;
+		var read = dis.map.permissions.read;
+		var write = dis.map.permissions.write;
+		var del = dis.map.permissions.del;
+		if(!eval(perm)) {
+			dis.errors.push(error("permission", "you need '" + perm + "' permissions to perform this action.", null));
+			dis.propergate = false;
+		}
+		done();
+	}
+	return f;
+}
+
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+
+function getPermissions(dis, done) {
+	try {
+		var getPerm = {
+			"AttributesToGet": [ "Permissions" ],
+			"Key": { "Window": { "S": dis.map.windowName }, "User": { "S": dis.map.username } },
+			"TableName": process.env.PERMISSIONS
+		};
+		AWS.dynamodb.getItem(getPerm, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed to obtain permisions", err));
+				dis.propergate = false;
+				done();
 			} else {
-				result.errors.push(null);
-				result.values.push(value);
+				if(!data.Item) {
+					dis.map.permissions = permissionsObj(false, false, false, false);
+				} else {
+					var permissions = data.Item.Permissions.M;
+					Object.entries(permissions).forEach(function(perm) {
+						permissions[perm[0]] = permissions[perm[0]].BOOL;
+					});
+					dis.map.permissions = permissions;
+				}
+				var getOwner = {
+					"AttributesToGet": [ "Owner" ],
+					"Key": { "WindowName": { "S": dis.map.windowName } },
+					"TableName": process.env.WINDOWS
+				};
+				AWS.dynamodb.getItem(getOwner, function(err, data) {
+					if(err) {
+						dis.errors.push(error("ressource", "failed to obtain window-owner from database", err));
+						dis.propergate = false;
+					} else {
+						if(data.Item) {
+							dis.map.permissions.owner = data.Item.Owner.S === dis.map.username;
+						} else {
+							dis.map.permissions.owner = false;
+						}
+					}
+					done();
+				});
 			}
 		});
-		callback(result);
-	});
+	} catch (err) { 
+		dis.errors.push(error("exception", "failed to obtain permisions", err));
+		dis.propergate = false;
+		done();
+	}
 }
 
-// ---------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------
+function listFiles(dis, done) {
+	try {
+		var scan = { 
+			ExpressionAttributeValues: { ":wn": { S: dis.map.windowName } }, 
+			FilterExpression: "WindowName = :wn", 
+			TableName: process.env.FILES, 
+			ProjectionExpression: "FileName, #Time, #User",
+			ExpressionAttributeNames: { "#Time": "Time", "#User": "User" }
+		};
+		AWS.dynamodb.scan(scan, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed to obtain file list from database", err));
+			} else {
+				var list = [];
+				data.Items.forEach(function(element) {
+					var item = {};
+					item.FileName = element.FileName.S;
+					item.Time = element.Time.S;
+					item.User = element.User.S;
+					list.push(item);
+				});
+				dis.result.list = list;
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed to obtain file list from database", err));
+		done();
+	}
+}
 
-function removeFilesAndWindowContents(windowId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var scan = { 
-				ExpressionAttributeValues: { ":wid": { S: windowId } }, 
-				FilterExpression: "WindowId = :wid", 
-				TableName: process.env.WINDOW_CONTENT, 
-				ProjectionExpression: "FileId" 
-			};
-			// Frage alle files von des windows mit windowId ab ...
-			AWS.dynamodb.scan(scan, function(err, data) {
-				if(err) {
-					resolve(error("ressource", "failed to obtain file list from database", err));
-				} else {
-					var batch = [];
-					// und erstelle für jedes file ...
-					data.Items.forEach(function(element) {
-						// ... einen promise zum löschen des files im bucket ...
-						batch.push(new Promise(function(resolve, reject) {
-							try {
-								var del = {
-									Bucket: process.env.BUCKET, 
-									Key: element.FileId.S
-								};
-								AWS.s3.deleteObject(del, function(err, data) {
-									if(err) {
-										resolve(error("ressource", "failed deleting data in storage", err));
-									} else {
-										resolve(data);
-									}
-								});
-							} catch (err) {
-								resolve(error("exception", "failed deleting data in storage", err));
-							}
-						}));
-						// ... und einen promise zum löschen des eintrags in window-content der db ...
-						batch.push(new Promise(function(resolve, reject) {
-							try {
-								var del = { 
-									TableName: process.env.WINDOW_CONTENT, 
-									Key: { 
-										"FileId": {"S": element.FileId.S}, 
-									}
-								};
-								AWS.dynamodb.deleteItem(del, function(err, data) {
-									if (err) { 
-										resolve(error("ressource", "failed deleting data in database", err));
-									} else { 
-										resolve(data);
-									}
-								});
-							} catch (err) {
-								resolve(error("exception", "failed deleting data in database", err));
-							}
-						}));
+function putFileInfoDynamoDB(dis, done) {
+	try {
+		var put = { 
+			TableName: process.env.FILES, 
+			Item: { 
+				"FileName": {"S": dis.map.fileName}, 
+				"WindowName": {"S": dis.map.windowName},
+				"User": {"S": dis.map.username},
+				"Time": {"S": "" + new Date()}
+			}
+		};
+		AWS.dynamodb.putItem(put, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed putting file info into database", err));
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed putting file info into database", err));
+		done();
+	}
+}
+
+function putFileS3(dis, done) {
+	try {
+		var put = {
+			Bucket: process.env.BUCKET,
+			Key: dis.map.windowName + "." + dis.map.fileName,			
+			Body: dis.map.binary
+		};
+		AWS.s3.putObject(put, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed putting data into storage", err));
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed putting data into storage", err));
+		done();
+	}
+}
+
+function getFileS3(dis, done) {
+	try {
+		var get = {
+			Bucket: process.env.BUCKET,
+			Key: dis.map.windowName + "." + dis.map.fileName
+		};
+		AWS.s3.getObject(get, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed to obtain file from storage", err));
+				done();
+			} else {
+				dis.result.body = data.Body;
+				dis.result.fileName = dis.map.fileName;
+				done();
+			}
+		});
+	} catch (err) { 
+		dis.errors.push(error("exception", "failed to obtain file from storage", err));
+		done();
+	}
+}
+
+function deleteFileS3(dis, done) {
+	try {
+		var del = {
+			Bucket: process.env.BUCKET, 
+			Key: dis.map.windowName + "." + dis.map.fileName
+		};
+		AWS.s3.deleteObject(del, function(err, data) {
+			if(err) {
+				dis.errors.push(error("exception", "failed deleting data in storage", err));
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed deleting data in storage", err));
+		done();
+	}
+}
+
+function setPermissions(dis, done) {
+	try {
+		console.log(dis);
+		var put = { 
+			TableName: process.env.PERMISSIONS,
+			Item: { 				
+				"Window": {"S": dis.map.windowName}, 
+				"User": {"S": dis.map.forUser}, 
+				"Permissions": {"M": {
+					"admin": {"BOOL": dis.map.forUserPermissions.admin},
+					"read": {"BOOL": dis.map.forUserPermissions.read},
+					"write": {"BOOL": dis.map.forUserPermissions.write}, 
+					"del": {"BOOL": dis.map.forUserPermissions.del}
+				}}
+			}
+		};
+		AWS.dynamodb.putItem(put, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed setting permissions in database", err));
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed setting permissions in database", err));
+		done();
+	}
+}
+
+function deleteFileInfoDynamoDB(dis, done) {
+	try {
+		var del = { 
+			TableName: process.env.FILES, 
+			Key: { 
+				"FileName": {"S": dis.map.fileName}, 
+				"WindowName": {"S": dis.map.windowName}
+			}
+		};
+		AWS.dynamodb.deleteItem(del, function(err, data) {
+			if (err) { 
+				dis.errors.push(error("ressource", "failed deleting file info in database", err));
+			} 
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed deleting file info in database", err));
+		done();
+	}
+}
+
+function removeFilesAndFileInfos(dis, done) {
+	try {
+		var scan = { 
+			ExpressionAttributeValues: { ":wn": { S: dis.map.windowName } }, 
+			FilterExpression: "WindowName = :wn", 
+			TableName: process.env.FILES, 
+			ProjectionExpression: "FileName" 
+		};
+		// Frage alle files von des windows mit windowName ab ...
+		AWS.dynamodb.scan(scan, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed to obtain file list from database", err));
+				done();
+			} else {
+				var batch = [];
+				// und erstelle für jedes file ...
+				data.Items.forEach(function(element) {
+					// ... einen promise zum löschen des files im bucket ...
+					batch.push(function(dis, done) {
+						try {
+							var del = {
+								Bucket: process.env.BUCKET, 
+								Key: dis.map.windowName + "." + element.FileName.S
+							};
+							AWS.s3.deleteObject(del, function(err, data) {
+								if(err) {
+									dis.errors.push(error("ressource", "failed deleting data in storage", err));
+								}
+								done();
+							});
+						} catch (err) {
+							dis.errors.push(error("exception", "failed deleting data in storage", err));
+							done();
+						}
 					});
-					var error = null;
-					// ... und führe alle promises aus.
-					Promise.all(batch).then(function(values) { // dann werden die rückgabewerte aus resolve() verarbeitet.
-						values.forEach(function(value) { 
-							if(value.error) { 
-								error = value; 
-							}
-						});
+					// ... und einen promise zum löschen des eintrags in window-content der db ...
+					batch.push(function(dis, done) {
+						try {
+							var del = { 
+								TableName: process.env.FILES, 
+								Key: { 
+									"FileName": {"S": element.FileName.S}, 
+									"WindowName": {"S": dis.map.windowName}, 
+								}
+							};
+							AWS.dynamodb.deleteItem(del, function(err, data) {
+								if (err) { 
+									dis.errors.push(error("ressource", "failed deleting data in database", err));
+								}
+								done();
+							});
+						} catch (err) {
+							dis.errors.push(error("exception", "failed deleting data in database", err));
+							done();
+						}
 					});
-					if(error) {
-						resolve(error("exception", "batch error"));
-					} else {
-						resolve(null);
-					}
-				}
-			});
-		} catch (err) {
-			resolve(error("exception", "failed deleting data in database", err));
-		}
-	});
+				});
+				// ... und führe alle promises aus.
+				dis.tasks.push(batch);
+				done();
+			}
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed deleting data in database", err));
+		done();
+	}
 }
 
-function removeWindowDynamoDB(windowId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var del = { 
-				TableName: process.env.WINDOW, 
-				Key: { 
-					"WindowId": {"S": windowId}, 
-				}
-			};
-			AWS.dynamodb.deleteItem(del, function(err, data) {
-				if (err) { 
-					resolve(error("ressource", "failed deleting data in database", err));
-				} else { 
-					resolve(data);
-				}
-			});
-		} catch (err) {
-			resolve(error("exception", "failed deleting data in database", err));
-		}
-	});
+function deleteWindowDynamoDB(dis, done) {
+	try {
+		var del = { 
+			TableName: process.env.WINDOWS, 
+			Key: { 
+				"WindowName": {"S": dis.map.windowName}, 
+			}
+		};
+		AWS.dynamodb.deleteItem(del, function(err, data) {
+			if (err) { 
+				dis.errors.push(error("ressource", "failed deleting window in database", err));
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed deleting window in database", err));
+		done();
+	}
 }
 
-function putWindowDynamoDB(windowId, adminUserId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var put = { 
-				TableName: process.env.WINDOW, 
-				Item: { 
-					"WindowId": {"S": windowId}, 
-					"AdminUserId": {"S": adminUserId}, 
-				},
-				ConditionExpression: 'attribute_not_exists(WindowId)'
-			};
-			AWS.dynamodb.putItem(put, function(err, data) {
-				if(err) {
-					console.log(err);
-					if(err.code == 'ConditionalCheckFailedException') {
-						resolve(error("ressource", "windows already exists", err));
-					} else {
-						resolve(error("ressource", "failed putting data into database", err));
-					}
+function putWindowDynamoDB(dis, done) {
+	try {
+		var put = { 
+			TableName: process.env.WINDOWS, 
+			Item: { 
+				"WindowName": {"S": dis.map.windowName}, 
+				"Owner": {"S": dis.map.username}, 
+			},
+			ConditionExpression: 'attribute_not_exists(WindowName)'
+		};
+		AWS.dynamodb.putItem(put, function(err, data) {
+			if(err) {
+				if(err.code == 'ConditionalCheckFailedException') {
+					dis.errors.push(error("ressource", "windows already exists", err));
 				} else {
-					resolve(data);
+					dis.errors.push(error("ressource", "failed creating window in database", err));
 				}
-			});
-		} catch (err) {
-			resolve(error("exception", "failed putting data into database", err));
-		}
-	});
-}
-
-function removeWindowContentDynamoDB(fileId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var del = { 
-				TableName: process.env.WINDOW_CONTENT, 
-				Key: { 
-					"FileId": {"S": fileId}, 
-				}
-			};
-			AWS.dynamodb.deleteItem(del, function(err, data) {
-				if (err) { 
-					resolve(error("ressource", "failed deleting data in database", err));
-				} else { 
-					resolve(data);
-				}
-			});
-		} catch (err) {
-			resolve(error("ressource", "failed deleting data in database", err));
-		}
-	});
-}
-
-function removeFileS3(fileId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var del = {
-				Bucket: process.env.BUCKET, 
-				Key: fileId
-			};
-			AWS.s3.deleteObject(del, function(err, data) {
-				if(err) {
-					resolve(error("ressource", "failed deleting data in storage", err));
-				} else {
-					resolve(data);
-				}
-			});
-		} catch (err) {
-			resolve(error("ressource", "failed deleting data in storage", err));
-		}
-	});
-}
-
-function listWindowFiles(windowId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var scan = { 
-				ExpressionAttributeValues: { ":wid": { S: windowId } }, 
-				FilterExpression: "WindowId = :wid", 
-				TableName: process.env.WINDOW_CONTENT, 
-				ProjectionExpression: "FileId, FileName" 
-			};
-			AWS.dynamodb.scan(scan, function(err, data) {
-				if(err) {
-					resolve(error("ressource", "failed to obtain file list from database", err));
-				} else {
-					var list = [];
-					data.Items.forEach(function(element) {
-						var item = {};
-						item.FileId = element.FileId.S;
-						item.FileName = element.FileName.S;
-						list.push(item);
-					});
-					resolve(list);
-				}
-			});
-		} catch (err) {
-			resolve(error("exception", "failed to obtain file list from database", err));
-		}
-	});
-}
-
-function getFileNameByID(fileId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var get = {
-				"AttributesToGet": [ "FileName" ],
-				"Key": { "FileId": { "S": fileId } },
-				"TableName": process.env.WINDOW_CONTENT
-			};
-			AWS.dynamodb.getItem(get, function(err, data) {
-				if(err) {
-					resolve(error("ressource", "failed to obtain filename from database", err));
-				} else {
-					console.log(data);
-					resolve(data);
-				}
-			});
-		} catch (err) { 
-			resolve(error("exception", "failed to obtain filename from database", err));
-		}
-	});
-}
-
-function getFileByID(fileId) {
-	return new Promise(function(resolve, reject) {
-		if(fileId === undefined) resolve({"error": "parameterisation", "description": "fileId is missing"});
-		try {
-			var get = {
-				Bucket: process.env.BUCKET,
-				Key: fileId
-			};
-			AWS.s3.getObject(get, function(err, data) {
-				if(err) {
-					resolve(error("ressource", "failed to obtain file from storage", err));
-				} else {
-					resolve(data);
-				}
-			});
-		} catch (err) { 
-			resolve(error("exception", "failed to obtain file from storage", err));
-		}
-	});
-}
-
-function putWindowContentDynamoDB(fileId, fileName, windowId) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var put = { 
-				TableName: process.env.WINDOW_CONTENT, 
-				Item: { 
-					"FileId": {"S": fileId}, 
-					"FileName": {"S": fileName}, 
-					"WindowId": {"S": windowId} 
-				}
-			};
-			AWS.dynamodb.putItem(put, function(err, data) {
-				if(err) {
-					resolve(error("ressource", "failed putting data into database", err));
-				} else {
-					resolve(data);
-				}
-			});
-		} catch (err) {
-			resolve(error("exception", "failed putting data into database", err));
-		}
-	});
-}
-
-function putFileS3(fileId, data) {
-	return new Promise(function(resolve, reject) {
-		try {
-			var put = {
-				Body: data, 
-				Bucket: process.env.BUCKET, 
-				Key: fileId
-			};
-			AWS.s3.putObject(put, function(err, data) {
-				if(err) {
-					resolve(error("ressource", "failed putting data into storage", err));
-				} else {
-					resolve(data);
-				}
-			});
-		} catch (err) {
-			resolve(error("exception", "failed putting data into storage", err));
-		}
-	});
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed creating window in database", err));
+		done();
+	}
 }
 
 module.exports = {
-	addFile: function(windowId, fileName, data, callback) {;
-		var fileId = windowId + '.' + fileName;
-		executePromises([
-			putFileS3(fileId, data), 
-			putWindowContentDynamoDB(fileId, fileName, windowId)
-		], function(result) {
-			reply(result, null, callback);
+	addFile: function(username, windowName, fileName, binary, callback) {
+		var map = { 
+			"username": username, 
+			"windowName": windowName, 
+			"fileName": fileName, 
+			"binary": binary
+		};
+		dispatch([[getPermissions], [checkPermissions("write")], [putFileS3, putFileInfoDynamoDB]], map, (data) => {
+			callback(reply(data));
 		});
 	},
-	getFile: function(fileId, callback) {
-		executePromises([
-			getFileByID(fileId),
-			getFileNameByID(fileId),
-		], function(result) {
-			reply(result, {data: result.values[0].Body, filename: result.values[1].Item.FileName.S}, callback);
+	getFile: function(username, windowName, fileName, callback) {
+		var map = { 
+			"username": username, 
+			"windowName": windowName, 
+			"fileName": fileName
+		};
+		dispatch([[checkParams], [getPermissions], [checkPermissions("read")], [getFileS3]], map, (data) => {
+			callback(reply(data));
 		});
 	},
-	listFile: function(windowId, callback) {
-		executePromises([
-			listWindowFiles(windowId),
-		], function(result) {
-			reply(result, result.values[0], callback);
+	listFile: function(username, windowName, callback) {
+		var map = { 
+			"username": username, 
+			"windowName": windowName
+		};
+		dispatch([[checkParams], [getPermissions], [checkPermissions("read")], [listFiles]], map, (data) => {
+			callback(reply(data));
 		});
 	},
-	removeFile: function(fileId, callback) {
-		executePromises([
-			removeFileS3(fileId), 
-			removeWindowContentDynamoDB(fileId)
-		], function(result) {
-			reply(result, null, callback);
+	deleteFile: function(username, windowName, fileName, callback) {
+		var map = { 
+			"username": username, 
+			"windowName": windowName,
+			"fileName": fileName
+		};
+		dispatch([[checkParams], [getPermissions], [checkPermissions("del")], [deleteFileS3, deleteFileInfoDynamoDB]], map, (data) => {
+			callback(reply(data));
 		});
 	},
-	addWindow: function(windowId, adminUserId, callback) {
-		executePromises([
-			putWindowDynamoDB(windowId, adminUserId)
-		], function(result) {
-			reply(result, null, callback);
+	addWindow: function(username, windowName, callback) {
+		var map = { 
+			"username": username, 
+			"windowName": windowName,
+			"forUserPermissions": permissionsObj(true, true, true, true),
+			"forUser": username
+		};
+		dispatch([[checkParams], [putWindowDynamoDB, setPermissions]], map, (data) => {
+			callback(reply(data));
 		});
 	},
-	removeWindow: function(windowId, callback) {
-		executePromises([
-			removeFilesAndWindowContents(windowId), 
-			removeWindowDynamoDB(windowId)
-		], function(result) {
-			reply(result, null, callback);
+	deleteWindow: function(username, windowName, callback) {
+		// TODO: delete permissions
+		var map = { 
+			"username": username, 
+			"windowName": windowName
+		};
+		dispatch([[checkParams], [getPermissions], [checkPermissions("owner")], [deleteWindowDynamoDB, removeFilesAndFileInfos]], map, (data) => {
+			callback(reply(data));
+		});
+	},
+	setPermission: function(username, forUser, windowName, permissions, callback) {
+		var map = { 
+			"username": username, 
+			"forUser": forUser,
+			"windowName": windowName,
+			"forUserPermissions": permissions
+		};
+		dispatch([[checkParams], [getPermissions], [checkPermissions("admin || owner")], [setPermissions]], map, (data) => {
+			callback(reply(data));
 		});
 	}
 }

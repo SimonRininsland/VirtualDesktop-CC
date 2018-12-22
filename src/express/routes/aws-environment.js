@@ -1,5 +1,5 @@
 var AWS = require('aws-sdk');
-var CognitoExpress = require("cognito-express")
+var CognitoExpress = require("cognito-express");
 
 module.exports = {
     init: function() {

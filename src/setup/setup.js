@@ -7,7 +7,98 @@ AWS.config.update({
 var dynamodb = new AWS.DynamoDB({endpoint: 'https://dynamodb.eu-central-1.amazonaws.com'});
 var s3 = new AWS.S3({endpoint: 'https://s3.eu-central-1.amazonaws.com'});
 
-var window = {
+var Windows = {
+	AttributeDefinitions: [
+		{
+			AttributeName: "WindowName", 
+			AttributeType: "S"
+		}
+	], 
+	KeySchema: [
+		{
+			AttributeName: "WindowName", 
+			KeyType: "HASH"
+		}
+	],
+	ProvisionedThroughput: { 
+		ReadCapacityUnits: 1,
+		WriteCapacityUnits: 1
+	},
+	TableName: "Windows"
+};
+
+var Files = {
+	AttributeDefinitions: [
+		{
+			AttributeName: "FileName", 
+			AttributeType: "S"
+		},
+		{
+			AttributeName: "WindowName", 
+			AttributeType: "S"
+		}
+	], 
+	KeySchema: [
+		{
+			AttributeName: "FileName", 
+			KeyType: "HASH"
+		},
+		{
+			AttributeName: "WindowName", 
+			KeyType: "RANGE"
+		}
+	],
+	ProvisionedThroughput: { 
+		ReadCapacityUnits: 1,
+		WriteCapacityUnits: 1
+	},
+	TableName: "Files"
+};
+
+var Permissions = {
+	AttributeDefinitions: [
+		{
+			AttributeName: "Window", 
+			AttributeType: "S"
+		},
+		{
+			AttributeName: "User", 
+			AttributeType: "S"
+		}
+	], 
+	KeySchema: [
+		{
+			AttributeName: "Window", 
+			KeyType: "HASH"
+		},
+		{
+			AttributeName: "User", 
+			KeyType: "RANGE"
+		}
+	],
+	ProvisionedThroughput: { 
+		ReadCapacityUnits: 1,
+		WriteCapacityUnits: 1
+	},
+	TableName: "Permissions"
+};
+
+/* dynamodb.createTable(Windows, function(err, data) {
+	if (err) console.log(err, err.stack);
+	else console.log("Success", data);
+}); 
+
+dynamodb.createTable(Files, function(err, data) {
+	if (err) console.log(err, err.stack);
+	else console.log("Success", data);
+}); */
+
+dynamodb.createTable(Permissions, function(err, data) {
+	if (err) console.log(err, err.stack);
+	else console.log("Success", data);
+}); 
+
+/* var window = {
 	AttributeDefinitions: [
 		{
 			AttributeName: "WindowId", 
@@ -45,7 +136,12 @@ var windowContent = {
 		WriteCapacityUnits: 1
 	},
 	TableName: "WindowContent"
-};
+}; */
+
+/* dynamodb.createTable(permissions, function(err, data) {
+	if (err) console.log(err, err.stack);
+	else console.log("Success", data);
+});
 
 dynamodb.createTable(window, function(err, data) {
 	if (err) console.log(err, err.stack);
@@ -60,7 +156,7 @@ dynamodb.createTable(windowContent, function(err, data) {
 s3.createBucket({Bucket: "filebucketvirtualdesktop"}, function(err, data) {
 	if (err) console.log(err, err.stack);
 	else console.log(data);
-});
+}); */
  
 // SNIPETS
 

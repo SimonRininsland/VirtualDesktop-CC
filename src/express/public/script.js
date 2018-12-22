@@ -12,12 +12,12 @@ function ready() {
 	}
 }
 
-function upload(file, windowId) {
+function upload(file, windowName) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', '/addFile');
 	var formData = new FormData();
 	formData.append('file', file);
-	formData.append('windowId', windowId);
+	formData.append('windowName', windowName);
 	xhr.send(formData);
 }
 

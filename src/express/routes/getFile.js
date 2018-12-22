@@ -10,16 +10,15 @@ router.get('/', function(req, res, next) {
 		if(err) {
 			res.send({"status": "error", "description": "authentification failed"});
 		} else {
-			VD.getFile(req.query.fileId, function(reply) {
+			VD.getFile(auth.username, req.query.windowName, req.query.fileName, function(reply) {
 				if(reply.status === 'error') {
-					res.send({"status": "error", "description": err.description});
+					res.send(reply);
 					res.end();
 				} else {
-					res.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Disposition": "attachment; filename=" + reply.data.filename });
-					res.end(reply.data.data);
+					res.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Disposition": "attachment; filename=" + reply.data.fileName });
+					res.end(reply.data.body);
 				}
 			});
-			
 		}
 	});
 });

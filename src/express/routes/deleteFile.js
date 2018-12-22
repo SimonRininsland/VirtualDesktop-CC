@@ -4,13 +4,13 @@ var AWS = require('./aws-environment');
 var VD = require('./virtual-desktop');
 AWS.init();
 
-router.post('/', function(req, res, next) {
+router.get('/', function(req, res, next) {
 	// Überprüfen des nutzer tokens (nutzer eingeloggt?).
 	AWS.cognito.validate(req.cookies.token, function(err, auth) {
 		if(err) {
 			res.send({"status": "error", "description": "authentification failed"});
 		} else {
-			VD.addFile(auth.username, req.body.windowName, req.files.file.name, req.files.file.data, function(reply) {
+			VD.deleteFile(auth.username, req.query.windowName, req.query.fileName, function(reply) {
 				res.send(reply);
 				res.end();
 			});
