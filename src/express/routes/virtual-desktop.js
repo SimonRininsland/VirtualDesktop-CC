@@ -174,7 +174,7 @@ function putFileInfoDynamoDB(dis, done) {
 				"FileName": {"S": dis.map.fileName}, 
 				"WindowName": {"S": dis.map.windowName},
 				"User": {"S": dis.map.username},
-				"Time": {"S": "" + new Date()}
+				"Time": {"S": "" + Math.floor(Date.now() / 1000)}
 			}
 		};
 		AWS.dynamodb.putItem(put, function(err, data) {
@@ -419,7 +419,7 @@ module.exports = {
 			"fileName": fileName, 
 			"binary": binary
 		};
-		dispatch([[getPermissions], [checkPermissions("write")], [putFileS3, putFileInfoDynamoDB]], map, (data) => {
+		dispatch([[checkParams], [getPermissions], [checkPermissions("write")], [putFileS3, putFileInfoDynamoDB]], map, (data) => {
 			callback(reply(data));
 		});
 	},
