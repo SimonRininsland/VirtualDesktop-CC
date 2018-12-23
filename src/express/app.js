@@ -22,5 +22,9 @@ app.use('/getFile', require('./routes/getFile'));
 app.use('/deleteWindow', require('./routes/deleteWindow'));
 app.use('/addWindow', require('./routes/addWindow'));
 app.use('/setPermission', require('./routes/setPermission'));
+app.use('/deletePermissions', require('./routes/deletePermissions'));
+app.use('/listWindows', require('./routes/listWindows'));
+app.use('/leaveWindow', require('./routes/leaveWindow'));
+app.use('/getUserPermissions', require('./routes/getUserPermissions'));
 
 module.exports = app;

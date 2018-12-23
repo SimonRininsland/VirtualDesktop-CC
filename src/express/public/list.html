@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+
+    
+    
+ <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="style.css"/>
+    
+    <script src="amazon-cognito-identity.min.js"></script>
+    <script src="script.js"></script>
+    <script src="api.js"></script>
+    
+
+    <title>VirtalDesktop login</title>
+      
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script>
+        
+        $( document ).ready(function() {
+            var WindowName = getCookie("windowName");
+            
+            getUserPermissions(WindowName, (res) => {
+                for(var i=0; i<res.data.list.length ;i++){
+                    var newUser = $("<li class='list-group-item'></li>").html(res.data.list[i].user);
+                    var selectUser = function() {
+                        $("#cbRead").attr('checked', this.data.permissions.read);
+                        $("#cbWrite").attr('checked', this.data.permissions.write);
+                        $("#cbDelete").attr('checked', this.data.permissions.del);
+                        $("#cbAdmin").attr('checked', this.data.permissions.admin);
+                        $("#inputUser").val(this.data.user);
+                    }
+                    newUser.click(selectUser.bind({data: res.data.list[i]}));
+                    $("#permList").append(newUser);
+                }
+            });
+            
+           $("#delUserButton").click(() => {
+               deletePermissions($("#inputUser").val(), WindowName, (result) => {});
+           });
+            
+            $("#saveAddUserButton").click(() => {
+                setPermission(WindowName, 
+                    $("#inputUser").val(), 
+                    $("#cbRead").is(':checked'), 
+                    $("#cbWrite").is(':checked'),              
+                    $("#cbDelete").is(':checked'), 
+                    $("#cbAdmin").is(':checked'),
+                    (result) => {});
+            });
+            
+        
+	       var filedroparea = document.getElementById("filedroparea");
+	       filedroparea.ondragover = function () { this.className = ''; return false; };
+           filedroparea.ondragend = function () { this.className = ''; return false; };
+           filedroparea.ondrop = function(e) {
+               e.stopPropagation();
+               e.preventDefault();
+               for(var i = 0; i < e.dataTransfer.files.length; i++) {
+                         var file = e.dataTransfer.files[i];
+                         addFile(WindowName, file, (result)=>{});
+               }
+           }
+            
+            
+            $("#windowNameText").html(WindowName);
+            listFile(WindowName,(res)=>{
+                //console.log(res)
+                for(var i=0; i<res.data.list.length ;i++){   
+                    var thumb = $("<a href='./getFile?windowName="+WindowName+"&fileName="+res.data.list[i].FileName+"'><img src='img/file2.jpg' class='img-responsive img-fluid'>"+res.data.list[i].FileName+"</a>");
+                    var button = $("<button class='btn btn-primary'>delete</button>");
+                    var delFile = function() {
+                        console.log(this.windowName, this.fileName);
+                        deleteFile(this.windowName, this.fileName, (result)=>{ window.location.href = "./list.html"; });
+                    }
+                    button.click(delFile.bind({windowName: WindowName, fileName: res.data.list[i].FileName}));
+                    var element = $("<div class='col-sm-2'></div>").append(thumb).append(button);
+                    $("#list").append(element);
+                }
+            });
+        });
+        
+    
+    
+    </script>
+
+  </head>
+  
+  <body>
+  
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="index.html">VirtualDesktop</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="filedrop.html">Funktionen <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Hilfe</a>
+      </li>
+        <li class="nav-item">
+        <a class="nav-link" href="#">Über VirtualDesktop</a>
+      </li>
+
+    </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Log In</a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="index.html">Anmelden</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="signup.html">Registrieren</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="confirm.html">Confirm</a>
+        </div>
+        </li>
+        </ul>
+</div>
+  </nav>
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+  Rechte für diesen Desktop vergeben
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Rechte an User vergeben, die deinen Desktop verwenden möchten:</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+        <div class="modal-body"><ul id="permList" class="list-group"> </ul></div>
+      <div class="modal-body">
+        <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="cbRead" value="option1">
+        <label class="form-check-label" for="inlineCheckbox1">Read</label>
+        </div>
+        <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="cbWrite" value="option2">
+        <label class="form-check-label" for="inlineCheckbox2">Write</label>
+        </div>
+        <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="cbDelete" value="option3">
+        <label class="form-check-label" for="inlineCheckbox3">Delete</label>
+      </div>
+          <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="cbAdmin" value="option4">
+        <label class="form-check-label" for="inlineCheckbox4">Admin</label>
+      </div>
+      </div>
+        <div> 
+          <input type="text" class="form-control" id="inputUser" aria-describedby="emailHelp" placeholder="Username eingeben">
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="delUserButton">Delete</button>
+        <button type="button" class="btn btn-primary" id="saveAddUserButton">Save/add</button>
+      </div>
+    </div>
+  </div>
+</div> 
+  
+
+  <div class="container" >
+      <div class="row text-center" id="windowNameText">window name</div>
+      <div class="row mt-3 text-center" id="list"></div>
+      
+      <div class="panel panel-default">
+        <div class="panel-heading"><strong>Upload Files</strong> <small>VirtalDesktop</small></div>
+        
+
+          
+
+          <!-- Drop Zone -->
+          <div class="upload-drop-zone" id="filedroparea">
+            drag and drop files here
+          </div>
+        
+            
+        
+
+        
+      </div>
+      
+             
+      </div>
+      
+  
+
+
+  
+  
+  
+ 
+ 
+ 
+  </body>
+</html>

@@ -12,6 +12,8 @@
     
     <script src="amazon-cognito-identity.min.js"></script>
     <script src="script.js"></script>
+    <script src="api.js"></script>
+    
     
 
     <title>VirtualDesktop login</title>
@@ -21,6 +23,56 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+     
+    <script>
+    listWindows((res)=>{
+        console.log(res)
+        for(var i=0; i<res.data.ownWindowList.length ;i++){   
+            var open = $("<li class='list-group-item'>"+res.data.ownWindowList[i].Window+"</li>");
+            $("#listWindow").append(element);
+            var openW = function() {
+                accessToken = getCookie("token");
+                setCookie("token", accessToken);
+                setCookie("windowName", this.windowName);
+                window.location.href = "./list.html";
+            }
+            open.click(openW.bind({windowName: res.data.ownWindowList[i].Window}));
+            var element = $("<div></div>").append(open);
+            $("#ownWindowList").append(element);
+        }
+        
+        for(var i=0; i<res.data.windowList.length ;i++){   
+            var open = $("<li class='list-group-item'>"+res.data.windowList[i].Window+"</li>");
+            var leave = $("<button class='btn btn-primary'>leave</button>");
+            
+            $("#listWindow").append(element);
+            var openW = function() {
+                accessToken = getCookie("token");
+                setCookie("token", accessToken);
+                setCookie("windowName", this.windowName);
+                window.location.href = "./list.html";
+            }
+            open.click(openW.bind({windowName: res.data.windowList[i].Window}));
+            var leaveW = function() {
+                leaveWindow(this.windowName, (result)=>{ window.location.href = "./listWindows.html"; });
+            }
+            leave.click(leaveW.bind({windowName: res.data.windowList[i].Window}));
+            var element = $("<div></div>").append(open).append(leave);
+            $("#windowList").append(element);
+        }
+        
+    });
+        
+    function addW() {
+        addWindow($("#addWindowName").val(), (result)=>{ 
+            accessToken = getCookie("token");
+            setCookie("token", accessToken);
+            setCookie("windowName", $("#addWindowName").val());
+            // window.location.href = "./list.html";
+        });
+    }    
+
+    </script>
 
   </head>
   <body>
@@ -53,8 +105,7 @@
           <a class="dropdown-item" href="signup.html">Registrieren</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="confirm.html">Confirm</a>
-          <a class="dropdown-item" href="list.html">Listfiles</a>
-          <a class="dropdown-item" href="listWindows.html">ListWindows</a>
+          <a class="dropdown-item" href="list.html">Confirm</a>
         </div>
         </li>
       </ul>
@@ -62,32 +113,23 @@
   </div>
   </nav>
       
-  <div class="container" id="loginform">
-<h1 class="form-heading">Melde dich bei VirtualDesktop an.</h1>
-<div class="login-form">
-<div class="loginform">
-    <form id="Login">
+  <div class="container">
+<h1 class="form-heading">deine DESKTOPS.</h1>
+      <div class="row text-center" id="windowNameText">Own Windows</div>
+      <ul class="list-group" id="ownWindowList"></ul>
+      <div class="row text-center" id="windowNameText">Other Windows</div>
+      <ul class="list-group" id="windowList"></ul>
+    
+    <form>
+  <div class="form-group">
+    <label for="exampleInputEmail1">Window Name eingeben</label>
+    <input type="text" class="form-control" id="addWindowName" aria-describedby="emailHelp" placeholder="Window name eingeben">
+ 
+  </div>
+  
+  <button type="button" class="btn btn-primary" onclick="addW()">+</button>
+</form>
 
-        <div class="form-group">
-
-
-            <input type="text" class="form-control" id="login_username" placeholder="Username">
-
-        </div>
-
-        <div class="form-group">
-
-            <input type="password" class="form-control" id="login_password" placeholder="Password">
-
-        </div>
-        <div class="newacc">
-        <a href="signup.html">Neu bei VirtualDesktop?</a>
-</div>
-        <button type="button" value="login" onclick="login()" class="btn btn-primary">Anmelden</button>
-
-    </form>
-</div>
-</div>	
 </div>	
       
   

@@ -117,3 +117,29 @@
   margin-bottom:20px;
 }
 .login-form{ text-align:center;}
+
+.col-sm-1 {
+      background:#ECECEC;
+      height: 70px;
+      color: black;
+      border: 1px solid #fff;
+      
+    }
+    
+.col-sm-2 {
+      background:#ECECEC;
+    }
+     
+
+    
+
+.btn span.glyphicon {    			
+	opacity: 0;				
+}
+.btn.active span.glyphicon {				
+	opacity: 1;				
+}
+
+.float{
+    float: left;
+}

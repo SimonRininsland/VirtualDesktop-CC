@@ -1,25 +1,3 @@
-function ready() {
-	var filedroparea = document.getElementById("filedroparea");
-	filedroparea.ondragover = function () { this.className = ''; return false; };
-	filedroparea.ondragend = function () { this.className = ''; return false; };
-	filedroparea.ondrop = function(e) {
-		e.stopPropagation();
-		e.preventDefault();
-		for(var i = 0; i < e.dataTransfer.files.length; i++) {
-			var file = e.dataTransfer.files[i];
-			upload(file, "HelloWindow");
-		}
-	}
-}
-
-function upload(file, windowName) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('POST', '/addFile');
-	var formData = new FormData();
-	formData.append('file', file);
-	formData.append('windowName', windowName);
-	xhr.send(formData);
-}
 
 var userPool = new AmazonCognitoIdentity.CognitoUserPool({
 	UserPoolId: 'COGNITO_POOL', // 'COGNITO_POOL' und 'COGNITO_CLIENT' 
@@ -43,7 +21,8 @@ function login() {
 		onSuccess: function (result) {
 			var accessToken = result.getAccessToken().getJwtToken();
 			console.log(accessToken);
-			document.cookie = "token=" + accessToken; 
+			document.cookie = "token=" + accessToken;
+            // setCookie(token, accessToken);
 		},
 		onFailure: function(err) {
 			alert(err.message || JSON.stringify(err));
@@ -92,3 +71,23 @@ function confirm() {
         console.log('call result: ' + result);
     });
 }
+
+// https://www.w3schools.com/js/js_cookies.asp
+function setCookie(name, value) {
+    document.cookie = name + "=" + value + ";path=/";
+}
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
