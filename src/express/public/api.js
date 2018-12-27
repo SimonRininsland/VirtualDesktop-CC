@@ -167,3 +167,32 @@ function getUserPermissions(windowName, callback) {
 	xhr.send(formData);
 }
 
+function getWindowProperties(windowName, callback) {
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            console.log(this.responseText);
+            callback(JSON.parse(this.responseText));
+        }
+    };
+	xhr.open('POST', '/getWindowProperties');
+	var formData = new FormData();
+	formData.append('windowName', windowName);
+	xhr.send(formData);
+}
+
+function setWindowProperties(windowName, public, callback) {
+	var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (this.readyState == 4) {
+            console.log(this.responseText);
+            callback(JSON.parse(this.responseText));
+        }
+    };
+	xhr.open('POST', '/setWindowProperties');
+	var formData = new FormData();
+	formData.append('windowName', windowName);
+	formData.append('public', public);
+	xhr.send(formData);
+}
+

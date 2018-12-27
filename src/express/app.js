@@ -26,5 +26,7 @@ app.use('/deletePermissions', require('./routes/deletePermissions'));
 app.use('/listWindows', require('./routes/listWindows'));
 app.use('/leaveWindow', require('./routes/leaveWindow'));
 app.use('/getUserPermissions', require('./routes/getUserPermissions'));
+app.use('/getWindowProperties', require('./routes/setWindowProperties'));
+app.use('/setWindowProperties', require('./routes/getWindowProperties'));
 
 module.exports = app;
