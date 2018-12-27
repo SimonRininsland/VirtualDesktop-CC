@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
 					res.send(reply);
 					res.end();
 				} else {
-					res.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Disposition": "attachment; filename=" + reply.data.fileName });
+					res.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Length": reply.data.length, "Content-Disposition": "attachment; filename=" + reply.data.fileName });
 					res.end(reply.data.body);
 				}
 			});
