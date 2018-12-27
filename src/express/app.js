@@ -30,5 +30,4 @@ app.use('/getWindowProperties', require('./routes/setWindowProperties'));
 app.use('/setWindowProperties', require('./routes/getWindowProperties'));
 app.use('/getStream', require('./routes/getStream'));
 
-
 module.exports = app;

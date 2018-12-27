@@ -268,43 +268,6 @@ function getFileS3(dis, done) {
 	}
 }
 
-/*function getFileS3(dis, done) {
-	try {
-		dis.result.fileName = dis.map.fileName;
-		var get = {
-			Bucket: process.env.BUCKET,
-			Key: dis.map.windowName + "." + dis.map.fileName
-		};
-		dis.result.fileStream = AWS.s3.getObject(get).createReadStream();
-		done();
-	} catch (err) { 
-		dis.errors.push(error("exception", "failed to obtain file from storage", err));
-		done();
-	}
-}*/
-
-/*function getFileS3(dis, done) {
-	try {
-		dis.result.fileName = dis.map.fileName;
-		var params = {
-			Bucket: process.env.BUCKET,
-			Key: dis.map.windowName + "." + dis.map.fileName
-		};
-		AWS.s3.headObject(params, function(err, data) {
-			if(err) {
-				dis.errors.push(error("exception", "failed deleting data in storage", err));
-			} else {
-				dis.result.fileStream = AWS.s3.getObject(params).createReadStream();
-				dis.result.length = data.ContentLength;
-			}
-			done();
-		});
-	} catch (err) { 
-		dis.errors.push(error("exception", "failed to obtain file from storage", err));
-		done();
-	}
-}*/
-
 function getStreamS3(dis, done) {
 	try {
 		dis.result.fileName = dis.map.fileName;
@@ -318,7 +281,6 @@ function getStreamS3(dis, done) {
 				dis.errors.push(error("exception", "failed deleting data in storage", err));
 			} else {
 				dis.result.fileStream = AWS.s3.getObject(params).createReadStream();
-				dis.result.length = data.ContentLength;
 			}
 			done();
 		});
