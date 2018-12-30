@@ -1,0 +1,1 @@
+aws lambda invoke --function-name CreateThumbnail --invocation-type Event --payload file://test.txt outputfile.txt

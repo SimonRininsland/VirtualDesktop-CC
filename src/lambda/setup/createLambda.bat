@@ -1,0 +1,1 @@
+aws lambda create-function --function-name CreateThumbnail --zip-file fileb://CreateThumbnail.zip --handler index.handler --runtime nodejs8.10 --role arn:aws:iam::737248450844:role/lambda-s3-role --timeout 10 --memory-size 1024
