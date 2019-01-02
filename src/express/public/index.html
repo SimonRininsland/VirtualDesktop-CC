@@ -28,7 +28,7 @@
 					</div>
 				</form>
 				<div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
-					<button type="button" class="w3-button w3-green" onclick="login(); controller.login(); showModal('login_modal', false);">Login</button>
+					<button type="button" class="w3-button w3-green" onclick="login(() => {controller.login()}); showModal('login_modal', false);">Login</button>
 					<span class="w3-right w3-padding w3-hide-small"><a href="#" onclick="showModal('login_modal', false); showModal('register_modal', true); controller.populate(urlParam('windowName'));">register new account</a></span>
 				</div>
 			</div>
@@ -220,14 +220,16 @@
 		<div id="menu" class="w3-sidebar w3-bar-block w3-card w3-light-grey">
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button> 
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('login_modal', true)" id="sidebar_login"><i class="fas fa-sign-in-alt"></i><span style="margin-left: 1em;">Login</span></button> 
-			<span><button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('add_window_modal', true)" id="sidebar_add_window"><i class="fas fa-plus"></i><span style="margin-left: 1em;">Add Window</span></button></span>
-			<span><button class="w3-button w3-bar-item w3-light-grey"  id="sidebar_desktops"><i class="fas fa-desktop"></i><span style="margin-left: 1em;">Desktops</span></button></span>
-			<span id="desktops"></span>
-			<button class="w3-button w3-bar-item w3-light-grey" id="sidebar_add_file"><i class="fas fa-folder-plus"></i><span style="margin-left: 1em;">Add File</span></button> 
+			<label class="w3-button w3-bar-item w3-light-grey" id="sidebar_add_file" for="sidebar_add_file_input"><i class="fas fa-cloud-upload-alt"></i><span style="margin-left: 1em;">Add File</span></label>
+			<input id="sidebar_add_file_input" type="file" style="display:none;" multiple />
+			<!--<button class="w3-button w3-bar-item w3-light-grey"><i class="fas fa-folder-plus"></i><span style="margin-left: 1em;">Add File</span></button> -->
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('add_user_modal', true)" id="sidebar_add_user"><i class="fas fa-user-plus"></i><span style="margin-left: 1em;">Add User</span></button> 
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('edit_user_modal', true)" id="sidebar_edit_user"><i class="fas fa-user-edit"></i><span style="margin-left: 1em;">Edit User</span></button> 
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('remove_user_modal', true)" id="sidebar_remove_user"><i class="fas fa-user-times"></i><span style="margin-left: 1em;">Remove User</span></button>
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('window_settings_modal', true)" id="sidebar_window_settings"><i class="fas fa-cogs"></i><span style="margin-left: 1em;">Desktop Settings</span></button> 
+			<span><button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('add_window_modal', true)" id="sidebar_add_window"><i class="fas fa-plus"></i><span style="margin-left: 1em;">Add Window</span></button></span>
+			<span><button class="w3-button w3-bar-item w3-light-grey" id="sidebar_desktops"><i class="fas fa-desktop"></i><span style="margin-left: 1em;">Desktops</span></button></span>
+			<span id="desktops"></span>
 		</div>
 		<!-- ----------------------------------- -->
 		<!-- FILE AREA-------------------------- -->
@@ -307,8 +309,21 @@
 				controller.addDesktop($("#add_windowname").val());
 			}
 
+			function submit_files() {
+				console.log(document.getElementById("sidebar_add_file"));
+			}
+			
 			$(document).ready(function () {
 				toggleSidebar();
+				
+				var inputElement = document.getElementById("sidebar_add_file");
+				inputElement.addEventListener("change", handleFiles, false);
+				function handleFiles() {
+					for (var i = 0; i < this.files.length; i++) {
+						var file = this.files[i];
+						controller.addFile(file, file.name);
+					}
+				}
 
 				var filedroparea = document.getElementById("filedroparea");
 				filedroparea.ondragover = function () { this.className = ''; return false; };
@@ -364,6 +379,13 @@
 							$("#filearea").find(`[data-filename='${arguments[2]}']`).remove();
 						} else if (arguments[1] == 'remove_all') {
 							$("#filearea").empty();
+						} else if (arguments[1] == 'remove_buttons') {
+							if (arguments[2] == 'hide') {
+								$('#filearea').find('.delete-button').css('display', 'none');
+								console.log($('#filearea').find('.delete-button'));
+							} else if (arguments[2] == 'show') {
+								$('#filearea').find('.delete-button').css('display', 'block');
+							}
 						}
 					} else if (arguments[0] == 'desktop') {
 						if (arguments[1] == 'add') {

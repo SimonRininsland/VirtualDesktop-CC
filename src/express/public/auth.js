@@ -3,7 +3,7 @@ var userPool = new AmazonCognitoIdentity.CognitoUserPool({
 	ClientId: 'COGNITO_CLIENT' // werden durch das www script ersetzt
 });
 
-function login() {
+function login(callback) {
 	var username = document.getElementById("login_username").value;
 	var password = document.getElementById("login_password").value;
 	var authenticationData = {
@@ -21,6 +21,7 @@ function login() {
 			var accessToken = result.getAccessToken().getJwtToken();
 			console.log(accessToken);
 			document.cookie = "token=" + accessToken;
+			callback();
 		},
 		onFailure: function(err) {
 			alert(err.message || JSON.stringify(err));

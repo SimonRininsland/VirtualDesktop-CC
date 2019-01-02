@@ -269,6 +269,7 @@ var controller = {
 		}
 	},
 	"populateFileArea": function() {
+		console.log(this.permissions.read);
 		this.listener('filearea', 'remove_all');
 		if(this.permissions.read || this.permissions.admin || this.permissions.owner) {
 			listFile(this.windowName, (res) => {
@@ -277,13 +278,13 @@ var controller = {
 						// this.listener('filearea', 'add', fileName, fileLink, thumbnailLink);
 						this.listener('filearea', 'add', res.data.list[i].FileName, `./getFile?windowName=${this.windowName}&fileName=${res.data.list[i].FileName}`, './img_snowtops.jpg');
 					}
+					if (this.permissions.del || this.permissions.admin || this.permissions.owner) {
+						this.listener('filearea', 'remove_buttons', 'show');
+					} else {
+						this.listener('filearea', 'remove_buttons', 'hide');
+					}
 				}
 			});
-			if (this.permissions.del || this.permissions.admin || this.permissions.owner) {
-				this.listener('filearea', 'remove_buttons', 'show');
-			} else {
-				this.listener('filearea', 'remove_buttons', 'hide');
-			}
 		}
 	},
 	"populatePermissions": function () {
@@ -363,6 +364,7 @@ var controller = {
 		this.windowName = windowName;
 		getOwnPermissions(this.windowName, (res) => {
 			if (res.status == 'error') { this.listener('error', JSON.stringify(res)); } else {
+				console.log(res.data.permissions);
 				this.permissions = res.data.permissions;
 				this.populateSideBar();
 				this.populateFileArea();

@@ -128,7 +128,7 @@ function getPermissions(dis, done) {
 					} else {
 						if(data.Item) {
 							dis.map.permissions.owner = data.Item.Owner.S === dis.map.username;
-							dis.map.permissions.read = data.Item.Public.BOOL;
+							if(!dis.map.permissions.read) dis.map.permissions.read = data.Item.Public.BOOL;
 						} else {
 							dis.map.permissions.owner = false;
 						}
