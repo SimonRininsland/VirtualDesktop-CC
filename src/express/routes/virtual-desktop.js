@@ -27,7 +27,7 @@ function reply(data) {
 	if(data.errors.length > 0) {
 		ret.status = "error";
 		data.errors.forEach(function(error) { 
-			console.log(error.data);
+			console.log("error:", error.data);
 			delete error.data; 
 		});
 		ret.errors = data.errors;
@@ -82,11 +82,18 @@ function checkPermissions(perm) {
 	return f;
 }
 
+
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------
 
+function addPermissionsToResult(dis, done) {
+	dis.result.permissions = dis.map.permissions;
+	done();
+}
+
+// TODO: public windows 
 function getPermissions(dis, done) {
 	try {
 		var getPerm = {
@@ -140,7 +147,7 @@ function getPermissions(dis, done) {
 function getUserPermissions(dis, done) {
 	try {
 		var scan = {
-            ExpressionAttributeValues: { ":wn": { S: dis.map.windowName } }, 
+			ExpressionAttributeValues: { ":wn": { S: dis.map.windowName } }, 
 			FilterExpression: "#Window = :wn", 
 			TableName: process.env.PERMISSIONS, 
 			ProjectionExpression: "#Permissions, #User",
@@ -157,7 +164,7 @@ function getUserPermissions(dis, done) {
 					Object.entries(permissions).forEach(function(perm) {
 						permissions[perm[0]] = permissions[perm[0]].BOOL;
 					});
-                    item.permissions = permissions;
+					item.permissions = permissions;
 					item.user = element.User.S;
 					list.push(item);
 				});
@@ -230,7 +237,7 @@ function putFileS3(dis, done) {
 	try {
 		var put = {
 			Bucket: process.env.BUCKET,
-			Key: dis.map.windowName + "." + dis.map.fileName,			
+			Key: dis.map.windowName + "." + dis.map.fileName,
 			Body: dis.map.binary
 		};
 		AWS.s3.putObject(put, function(err, data) {
@@ -333,7 +340,7 @@ function setPermissions(dis, done) {
 	try {
 		var put = { 
 			TableName: process.env.PERMISSIONS,
-			Item: { 				
+			Item: {
 				"Window": {"S": dis.map.windowName}, 
 				"User": {"S": dis.map.forUser}, 
 				"Permissions": {"M": {
@@ -375,6 +382,53 @@ function deleteFileInfoDynamoDB(dis, done) {
 		dis.errors.push(error("exception", "failed deleting file info in database", err));
 		done();
 	}
+}
+
+function deleteWindowPermissonsDynamoDB(dis, done) {
+	try {
+		var scan = { 
+			ExpressionAttributeValues: { ":w": { S: dis.map.windowName } }, 
+			FilterExpression: "#Window = :w", 
+			TableName: process.env.PERMISSIONS, 
+			ProjectionExpression: "#User",
+			ExpressionAttributeNames: { "#Window": "Window", "#User": "User" }
+		};
+		AWS.dynamodb.scan(scan, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed to obtain file list from database", err));
+			} else {
+				var batch = [];
+				data.Items.forEach(function(element) {
+					batch.push(function(dis, done) {
+						try {
+							var del = { 
+								TableName: process.env.PERMISSIONS, 
+								Key: { 
+									"Window": {"S": dis.map.windowName}, 
+									"User": { "S": element.User.S}
+								}
+							};
+							AWS.dynamodb.deleteItem(del, function(err, data) {
+								if (err) { 
+									dis.errors.push(error("ressource", "failed deleting permission in database", err));
+								} 
+								done();
+							});
+						} catch (err) {
+							dis.errors.push(error("exception", "failed deleting permission in database", err));
+							done();
+						}
+					});
+				});
+				dis.tasks.push(batch);
+			}
+			done();
+		});
+	} catch (err) {
+		dis.errors.push(error("exception", "failed to obtain file list from database", err));
+		done();
+	}
+	
 }
 
 function removeFilesAndFileInfos(dis, done) {
@@ -501,21 +555,23 @@ function listWindows(dis, done) {
 			ExpressionAttributeValues: { ":user": { S: dis.map.username } }, 
 			FilterExpression: "#User = :user", 
 			TableName: process.env.PERMISSIONS, 
-			ProjectionExpression: "#Window",
-			ExpressionAttributeNames: { "#User": "User", "#Window": "Window" }
+			ProjectionExpression: "#Window, #Permissions",
+			ExpressionAttributeNames: { "#User": "User", "#Window": "Window", "#Permissions": "Permissions" }
 		};
 		AWS.dynamodb.scan(scan, function(err, data) {
 			if(err) {
 				dis.errors.push(error("ressource", "failed to obtain window list from database", err));
 			} else {
-				var list = [];
+				dis.result.windows = {};
 				data.Items.forEach(function(element) {
-					var item = {};
+					var permissions = element.Permissions.M;
+					Object.entries(permissions).forEach(function(perm) {
+						permissions[perm[0]] = permissions[perm[0]].BOOL;
+					});
+					permissions.owner = false;
+					dis.result.windows[element.Window.S] = permissions;
 					// TODO: Window in WindowName umbennen
-					item.Window = element.Window.S;
-					list.push(item);
 				});
-				dis.result.windowList = list;
 			}
 			done();
 		});
@@ -538,13 +594,15 @@ function listOwnWindows(dis, done) {
 			if(err) {
 				dis.errors.push(error("ressource", "failed to obtain window list from database", err));
 			} else {
-				var list = [];
 				data.Items.forEach(function(element) {
-					var item = {};
-					item.Window = element.WindowName.S;
-					list.push(item);
+					if(dis.result.windows[element.WindowName.S]) {
+						dis.result.windows[element.WindowName.S].owner = true;
+					} else {
+						var permissions = permissionsObj(false, false, false, false);
+						permissions.owner = true;
+						dis.result.windows[element.WindowName.S] = permissions;
+					}
 				});
-				dis.result.ownWindowList = list;
 			}
 			done();
 		});
@@ -579,7 +637,7 @@ function setWindowProperties(dis, done) {
 	try {
 		var update = { 
 			TableName: process.env.WINDOWS,
-			Key: { "WindowName": {"S": dis.map.windowName }, "Owner": {"S": dis.map.username } },
+			Key: { "WindowName": {"S": dis.map.windowName } },
 			UpdateExpression: "SET #P = :p",
 			ExpressionAttributeNames: { "#P": "Public" }, 
 			ExpressionAttributeValues: { ":p": { BOOL: dis.map.public } }
@@ -600,7 +658,7 @@ function getWindowProperties(dis, done) {
 	try {
 		var get = { 
 			TableName: process.env.WINDOWS,
-			Key: { "WindowName": {"S": dis.map.windowName }, "Owner": {"S": dis.map.username } }
+			Key: { "WindowName": {"S": dis.map.windowName } }
 		};
 		AWS.dynamodb.getItem(get, function(err, data) {
 			if(err) {
@@ -693,7 +751,7 @@ module.exports = {
 			"username": username, 
 			"windowName": windowName
 		};
-		dispatch([[checkParams], [getPermissions], [checkPermissions("owner")], [deleteWindowDynamoDB, removeFilesAndFileInfos]], map, (data) => {
+		dispatch([[checkParams], [getPermissions], [checkPermissions("owner")], [deleteWindowDynamoDB, removeFilesAndFileInfos, deleteWindowPermissonsDynamoDB]], map, (data) => {
 			callback(reply(data));
 		});
 	},
@@ -723,7 +781,7 @@ module.exports = {
 		var map = { 
 			"username": username
 		};
-		dispatch([[checkParams], [listWindows, listOwnWindows]], map, (data) => {
+		dispatch([[checkParams], [listWindows], [listOwnWindows]], map, (data) => {
 			callback(reply(data));
 		});
 	},
@@ -734,6 +792,15 @@ module.exports = {
 			"windowName": windowName
 		};
 		dispatch([[checkParams], [deletePermissions]], map, (data) => {
+			callback(reply(data));
+		});
+	},
+	getOwnPermissions: function(username, windowName, callback) {
+		var map = { 
+			"username": username,
+			"windowName": windowName
+		};
+		dispatch([[checkParams], [getPermissions], [addPermissionsToResult]], map, (data) => {
 			callback(reply(data));
 		});
 	},
@@ -755,7 +822,7 @@ module.exports = {
 			callback(reply(data));
 		});
 	},
-	setWindowProperties: function(username, windowName, public, callback) {
+	setWindowProperties: function (username, windowName, public, callback) {
 		var map = { 
 			"username": username,
 			"windowName": windowName,

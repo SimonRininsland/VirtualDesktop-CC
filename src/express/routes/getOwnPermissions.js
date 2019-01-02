@@ -10,7 +10,7 @@ router.post('/', function(req, res, next) {
 		if(err) {
 			res.send({"status": "error", "description": "authentification failed"});
 		} else {
-			VD.getWindowProperties(auth.username, req.body.windowName, function(reply) {
+			VD.getOwnPermissions(auth.username, req.body.windowName, function(reply) {
 				res.send(reply);
 				res.end();
 			});
