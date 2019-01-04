@@ -214,6 +214,21 @@
 				</div>
 			</div>
 		</div>
+		
+		<!-- ----------------------------------- -->
+		<!-- VIDEO_MODAL --------------------- -->
+		<!-- ----------------------------------- -->
+		<div id="video_modal" class="w3-modal">
+			<div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:auto">
+				<div class="w3-center"><br>
+					<span onclick="showModal('video_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
+				</div>
+				<form class="w3-container w3-padding-16" action="/action_page.php">
+					<div class="w3-section" id="video_modal_content"></div>
+				</form>
+			</div>
+		</div>
+		
 		<!-- ----------------------------------- -->
 		<!-- MENU ------------------------------ -->
 		<!-- ----------------------------------- -->
@@ -361,9 +376,9 @@
 										<button type="button" class="delete-button w3-red w3-animate-opacity w3-btn w3-round"><i class="fas fa-trash-alt"></i></button>
 									</div>
 									<div class="w3-display-topleft w3-display-hover w3-large w3-margin">
-										<a href="${arguments[3]}" class="w3-btn w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-arrow-down"></i></a>
-										<button type="button" class="w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-search-plus"></i></button>
-										<button type="button" class="w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-info"></i></button>
+										<a href="./getFile?windowName=${arguments[3]}&fileName=${arguments[2]}" class="download-button w3-btn w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-arrow-down"></i></a>
+										<button type="button" class="zoom-button w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-search-plus"></i></button>
+										<button type="button" class="properties-button w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-info"></i></button>
 									</div>
 								</div>
 								<div class="w3-container w3-center">
@@ -373,6 +388,15 @@
 							function deleteFile() {
 								controller.deleteFile(this.fileName);
 							}
+							function zoomFile() {
+								if(this.fileName.match(/.*(\.mp4|\.ogv)/) != null) {
+									$("#video_modal_content").html($(`<video style="margin: auto; width: 100%;" id="videoPlayer" controls><source src="./getStream?windowName=${this.windowName}&fileName=${this.fileName}"></video>`));
+									showModal("video_modal", true);
+								} else {
+									window.location = `./getFile?windowName=${this.windowName}&fileName=${this.fileName}`;
+								}
+							}
+							$(element).find(".zoom-button").click(zoomFile.bind({ fileName: arguments[2], windowName: arguments[3] }));
 							$(element).find(".delete-button").click(deleteFile.bind({ fileName: arguments[2] }));
 							$("#filearea").append(element);
 						} else if (arguments[1] == 'delete') {
@@ -455,6 +479,7 @@
 				};
 				controller.populate();
 			});
+			
 		</script>
 	</body>
 </html>

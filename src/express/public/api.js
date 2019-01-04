@@ -276,7 +276,7 @@ var controller = {
 				if(res.status == 'error') { this.listener('error', JSON.stringify(res)); } else {
 					for(var i = 0; i < res.data.list.length; i++) {
 						// this.listener('filearea', 'add', fileName, fileLink, thumbnailLink);
-						this.listener('filearea', 'add', res.data.list[i].FileName, `./getFile?windowName=${this.windowName}&fileName=${res.data.list[i].FileName}`, './img_snowtops.jpg');
+						this.listener('filearea', 'add', res.data.list[i].FileName, this.windowName, './img_snowtops.jpg');
 					}
 					if (this.permissions.del || this.permissions.admin || this.permissions.owner) {
 						this.listener('filearea', 'remove_buttons', 'show');
@@ -355,7 +355,7 @@ var controller = {
 	"addFile": function(file, fileName) {
 		addFile(this.windowName, file, (res) => {
 			if(res.status == 'error') { this.listener('error', JSON.stringify(res)); } else {
-				this.listener('filearea', 'add', fileName, `./getFile?windowName=${this.windowName}&fileName=${fileName}`, './img_snowtops.jpg');
+				this.listener('filearea', 'add', fileName, this.windowName, './img_snowtops.jpg');
 			}
 		});
 	},
