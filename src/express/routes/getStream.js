@@ -1,5 +1,4 @@
 var express = require('express');
-var fs = require('fs');
 var router = express.Router();
 var AWS = require('./aws-environment');
 var VD = require('./virtual-desktop');
@@ -17,7 +16,7 @@ router.get('/', function(req, res, next) {
 					var parts = range.replace(/bytes=/, "").split("-");
 					var start = parseInt(parts[0], 10);
 					// var end = parts[1] ? parseInt(parts[1], 10) : fileSize-1
-					var end = parts[1] ?  parseInt(parts[1], 10) : start + ~~(fileSize * 0.05)
+					var end = parts[1] ? parseInt(parts[1], 10) : start + ~~(fileSize * 0.10)
 					if(end > fileSize - 1) {
 						var end = fileSize - 1;
 					}
@@ -31,7 +30,7 @@ router.get('/', function(req, res, next) {
 						res.writeHead(206, head);
 						reply2.data.fileStream.pipe(res);
 					});
-				});	
+				});
 			} else {
 				VD.getFileHead(auth.username, req.query.windowName, req.query.fileName, function(reply1) {
 					var fileSize = reply1.data.length;

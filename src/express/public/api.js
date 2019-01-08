@@ -8,7 +8,7 @@ function permissionsObj(admin, read, write, del) {
 }
 
 // TODO: Fortschrittsbalken
-function addFile(windowName, file, callback) {
+function addFile(windowName, file, callback, uploadEvent) {
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
 		if (this.readyState == 4) {
@@ -16,21 +16,39 @@ function addFile(windowName, file, callback) {
 			callback(JSON.parse(this.responseText));
 		}
 	};
+	xhr.upload.onprogress = function(event) {
+		uploadEvent(this.fileName, 'progress', event.total, event.loaded);
+	}.bind({ fileName: file.name });
+	xhr.upload.onloadstart = function (event) {
+		uploadEvent(this.fileName, 'start');
+	}.bind({ fileName: file.name });
+	xhr.upload.onloadend = function (event) {
+		uploadEvent(this.fileName, 'end');
+	}.bind({ fileName: file.name });
+	xhr.upload.onerror = function (event) {
+		uploadEvent(this.fileName, 'error');
+	}.bind({ fileName: file.name });
+	xhr.upload.onabort = function (event) {
+		uploadEvent(this.fileName, 'abort');
+	}.bind({ fileName: file.name });
+	xhr.upload.ontimeout = function (event) {
+		uploadEvent(this.fileName, 'timeout');
+	}.bind({ fileName: file.name });
 	xhr.open('POST', '/addFile');
 	var formData = new FormData();
-	formData.append('file', file);
 	formData.append('windowName', windowName);
+	formData.append('file', file);
 	xhr.send(formData);
 }
 
 function getFile(windowName, fileName, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/getFile');
 	var formData = new FormData();
 	formData.append('fileName', fileName);
@@ -357,6 +375,8 @@ var controller = {
 			if(res.status == 'error') { this.listener('error', JSON.stringify(res)); } else {
 				this.listener('filearea', 'add', fileName, this.windowName, './img_snowtops.jpg');
 			}
+		}, (name, event, total, loaded) => {
+			this.listener('fileupload', name, event, total, loaded);
 		});
 	},
 	// desktop operations

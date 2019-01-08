@@ -21,7 +21,7 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('login_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<label><strong>Username: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Username" id="login_username" required>
 						<label><strong>Password: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="password" placeholder="Enter Password" id="login_password" required>
@@ -41,7 +41,7 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('register_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<label><strong>Username: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Username" id="register_username" required>
 						<label><strong>E-Mail: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="email" placeholder="Enter E-Mail" id="register_email" required>
@@ -64,7 +64,7 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('confirm_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<label><strong>Username: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Username" id="confirm_username" required>
 						<label><strong>Code: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Code" id="confirm_code" required>
@@ -86,7 +86,7 @@
 					<br>
 					<span onclick="showModal('add_window_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<label><strong>Window Name: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Window Name" id="add_windowname" required>
 					</div>
@@ -105,7 +105,7 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('add_user_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<label><strong>Username: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Username" id="add_username" required>
 						<p><label><strong>Permissions: </strong></label></p>
@@ -128,7 +128,7 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('edit_user_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<label><strong>Username: </strong></label><select id="edit_user_permissions" class="w3-select w3-margin-bottom"></select> 
 						<p><label><strong>Permissions: </strong></label></p>
@@ -152,7 +152,7 @@
 					<br>
 					<span onclick="showModal('remove_user_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<label><strong>Username: </strong></label><select id="remove_user_permissions" class="w3-select w3-margin-bottom"></select>
 					</div>
@@ -170,7 +170,7 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('window_settings_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
 						<p><label><strong>Properties: </strong></label></p>
 						<label><input class="w3-check" type="checkbox" id="window_settings_public_cb">Set desktop public.</label>
@@ -189,7 +189,7 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('error_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
+				<form class="w3-container w3-padding-16">
 					<p id="error_message"></p>
 				</form>
 				<div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
@@ -205,30 +205,26 @@
 				<div class="w3-center"><br>
 					<span onclick="showModal('x_window_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
-					Are you sure?
-				</form>
+				Are you sure?
 				<div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
 					<button type="button" class="w3-button w3-red" onclick="showModal('x_window_modal', false); x_window()">Yes</button>
 					<button type="button" class="w3-button w3-green" onclick="showModal('x_window_modal', false)">No</button>
 				</div>
 			</div>
 		</div>
-		
 		<!-- ----------------------------------- -->
-		<!-- VIDEO_MODAL --------------------- -->
+		<!-- ZOOM MODAL ------------------------ -->
 		<!-- ----------------------------------- -->
-		<div id="video_modal" class="w3-modal">
+		<div id="zoom_modal" class="w3-modal">
 			<div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:auto">
 				<div class="w3-center"><br>
-					<span onclick="showModal('video_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
+					<span onclick="showModal('zoom_modal', false); $('#zoom_modal_content').empty()" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
 				</div>
-				<form class="w3-container w3-padding-16" action="/action_page.php">
-					<div class="w3-section" id="video_modal_content"></div>
+				<form class="w3-container w3-padding-16">
+					<div class="w3-section" id="zoom_modal_content"></div>
 				</form>
 			</div>
 		</div>
-		
 		<!-- ----------------------------------- -->
 		<!-- MENU ------------------------------ -->
 		<!-- ----------------------------------- -->
@@ -256,6 +252,7 @@
 			<div class="w3-margin" style="color: #ccc; height: 500px; width: auto; border: 4px; border-style: dashed; border-radius: 25px; text-align: center; line-height: 500px" id="filedroparea">
 				drag and drop files here
 			</div>
+			<div id="progress_bars" class="w3-margin"></div>
 		</div>
 		<!-- ----------------------------------- -->
 		<!-- SCRIPT ---------------------------- -->
@@ -362,7 +359,7 @@
 				}); 
 
 				controller.listener = function () {
-					console.log(arguments);
+					// console.log(arguments);
 					if (arguments[0] == 'error') {
 						$("#error_message").html(arguments[1]);
 						showModal("error_modal", true);
@@ -370,30 +367,37 @@
 					if (arguments[0] == 'filearea') {
 						if (arguments[1] == 'add') {
 							var element = $(`<div data-filename="${arguments[2]}" class="w3-col s12 m6 l2 w3-card w3-margin w3-opacity-min w3-hover-opacity-off" style="transition:0.5s; margin:0; padding:0;">
-								<div class="w3-display-container">
+								<div class="w3-display-container zoom-button">
 									<img src="${arguments[4]}" style="width:100%">
 									<div class="w3-display-topright w3-display-hover w3-large w3-margin">
 										<button type="button" class="delete-button w3-red w3-animate-opacity w3-btn w3-round"><i class="fas fa-trash-alt"></i></button>
 									</div>
 									<div class="w3-display-topleft w3-display-hover w3-large w3-margin">
-										<a href="./getFile?windowName=${arguments[3]}&fileName=${arguments[2]}" class="download-button w3-btn w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-arrow-down"></i></a>
-										<button type="button" class="zoom-button w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-search-plus"></i></button>
-										<button type="button" class="properties-button w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-info"></i></button>
+										<a onclick="event.stopPropagation();" href="./getFile?windowName=${arguments[3]}&fileName=${arguments[2]}" class="download-button w3-btn w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-arrow-down"></i></a>
+										<button type="button" class="w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-search-plus"></i></button>
 									</div>
 								</div>
 								<div class="w3-container w3-center">
-									<p>${arguments[2]}</p>
+									<p style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${arguments[2]}</p>
 								</div>
 							</div>`);
-							function deleteFile() {
+							function deleteFile(event) {
+								event.stopPropagation();
 								controller.deleteFile(this.fileName);
 							}
-							function zoomFile() {
+							function zoomFile(event) {
+								event.stopPropagation();
 								if(this.fileName.match(/.*(\.mp4|\.ogv)/) != null) {
-									$("#video_modal_content").html($(`<video style="margin: auto; width: 100%;" id="videoPlayer" controls><source src="./getStream?windowName=${this.windowName}&fileName=${this.fileName}"></video>`));
-									showModal("video_modal", true);
+									$("#zoom_modal_content").html($(`<video style="margin: auto; width: 100%;" controls><source src="./getStream?windowName=${this.windowName}&fileName=${this.fileName}"></video>`));
+									showModal("zoom_modal", true);
+								} else if(this.fileName.match(/.*(\.jpg|\.png|\.bmp|\.jpeg|\.gif)/) != null) {
+									$("#zoom_modal_content").html($(`<img style="margin: auto; width: 100%;" src="./getStream?windowName=${this.windowName}&fileName=${this.fileName}"/>`));
+									showModal("zoom_modal", true);
+								} else if(this.fileName.match(/.*(\.mp3|\.wav|\.ogg)/) != null) {
+									$("#zoom_modal_content").html($(`<audio style="margin: auto; width: 100%;" controls><source src="./getStream?windowName=${this.windowName}&fileName=${this.fileName}"></audio>`));
+									showModal("zoom_modal", true);
 								} else {
-									window.location = `./getFile?windowName=${this.windowName}&fileName=${this.fileName}`;
+									window.location = `./getStream?windowName=${this.windowName}&fileName=${this.fileName}`;
 								}
 							}
 							$(element).find(".zoom-button").click(zoomFile.bind({ fileName: arguments[2], windowName: arguments[3] }));
@@ -474,6 +478,25 @@
 						} else {
 							$("#window_name").show();
 							$("#window_name").html(arguments[1]);
+						}
+					} else if (arguments[0] == 'fileupload') {
+						console.log(arguments);
+						var name = arguments[1];
+						var event = arguments[2];
+						progressBarContainer = $("#progress_bars").find(`[data-filename="${name}"]`);
+						if(event == 'progress') {
+							var total = arguments[3];
+							var loaded = arguments[4];
+							var percentage = ~~(loaded / total * 100);
+							progressBarContainer.find("div").css("width", percentage + "%");
+							progressBarContainer.find("div").html(`${name}: ${loaded} / ${total} (${percentage})%`);
+						} else if(event == 'start') {
+							$("#progress_bars").append($(`<div class="w3-light-grey w3-xlarge w3-center" data-filename="${name}"><div class="w3-container w3-green"></div></div>`));
+						} else if(event == 'end') {
+							progressBarContainer.remove();
+						} else {
+							alert(`File '${name}' ${event}`);
+							progressBarContainer.remove();
 						}
 					}
 				};

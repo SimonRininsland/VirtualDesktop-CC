@@ -235,19 +235,21 @@ function putFileInfoDynamoDB(dis, done) {
 
 function putFileS3(dis, done) {
 	try {
-		var put = {
+		var pass = new require('stream').PassThrough();
+		dis.map.stream.on('error', function(e) { console.log(e) }).pipe(pass);
+		var upload = {
 			Bucket: process.env.BUCKET,
 			Key: dis.map.windowName + "." + dis.map.fileName,
-			Body: dis.map.binary
+			Body: pass
 		};
-		AWS.s3.putObject(put, function(err, data) {
+		AWS.s3.upload(upload, function(err, data) {
 			if(err) {
-				dis.errors.push(error("ressource", "failed putting data into storage", err));
+				dis.errors.push(error("ressource", "failed upload data into storage", err));
 			}
 			done();
 		});
 	} catch (err) {
-		dis.errors.push(error("exception", "failed putting data into storage", err));
+		dis.errors.push(error("exception", "failed upload data into storage", err));
 		done();
 	}
 }
@@ -675,14 +677,14 @@ function getWindowProperties(dis, done) {
 }
 
 module.exports = {
-	addFile: function(username, windowName, fileName, binary, callback) {
+	addFile: function(username, windowName, fileName, stream, callback) {
 		var map = { 
 			"username": username, 
 			"windowName": windowName, 
 			"fileName": fileName, 
-			"binary": binary
+			"stream": stream
 		};
-		dispatch([[checkParams], [getPermissions], [checkPermissions("write || admin || owner")], [putFileS3, putFileInfoDynamoDB]], map, (data) => {
+		dispatch([[checkParams], [getPermissions], [checkPermissions("write || admin || owner")], [putFileS3], [putFileInfoDynamoDB]], map, (data) => {
 			callback(reply(data));
 		});
 	},
