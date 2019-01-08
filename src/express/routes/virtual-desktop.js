@@ -27,7 +27,9 @@ function reply(data) {
 	if(data.errors.length > 0) {
 		ret.status = "error";
 		data.errors.forEach(function(error) { 
-			console.log("error:", error.data);
+			if(error.type != 'user_info') {
+				console.log("error:", error.data);
+			}
 			delete error.data; 
 		});
 		ret.errors = data.errors;
@@ -285,7 +287,11 @@ function getThumbFileS3(dis, done) {
 		};
 		AWS.s3.getObject(get, function(err, data) {
 			if(err) {
-				dis.errors.push(error("ressource", "failed to obtain file from storage", err));
+				if(err.code == 'NoSuchKey') {
+					dis.errors.push(error("user_info", "there is no thumbnail for '" + dis.map.windowName + "." + dis.map.fileName + "'", err));
+				} else {
+					dis.errors.push(error("ressource", "failed to obtain file from storage", err));
+				}
 				done();
 			} else {
 				dis.result.body = data.Body;
@@ -558,7 +564,7 @@ function putWindowDynamoDB(dis, done) {
 		AWS.dynamodb.putItem(put, function(err, data) {
 			if(err) {
 				if(err.code == 'ConditionalCheckFailedException') {
-					dis.errors.push(error("ressource", "windows already exists", err));
+					dis.errors.push(error("user_info", "windows already exists", err));
 					dis.propergate = false;
 				} else {
 					dis.errors.push(error("ressource", "failed creating window in database", err));

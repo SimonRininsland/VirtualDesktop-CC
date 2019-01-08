@@ -28,5 +28,6 @@ app.use('/getWindowProperties', require('./routes/getWindowProperties'));
 app.use('/setWindowProperties', require('./routes/setWindowProperties'));
 app.use('/getStream', require('./routes/getStream'));
 app.use('/getOwnPermissions', require('./routes/getOwnPermissions'));
+app.use('/getThumbFile', require('./routes/getThumbFile'));
 
 module.exports = app;
