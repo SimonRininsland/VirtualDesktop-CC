@@ -373,7 +373,7 @@ var controller = {
 	"addFile": function(file, fileName) {
 		addFile(this.windowName, file, (res) => {
 			if(res.status == 'error') { this.listener('error', JSON.stringify(res)); } else {
-				this.listener('filearea', 'add', fileName, this.windowName, './img_snowtops.jpg');
+				this.listener('filearea', 'add', fileName, this.windowName, `thumb.${this.windowName}.${fileName}`);
 			}
 		}, (name, event, total, loaded) => {
 			this.listener('fileupload', name, event, total, loaded);

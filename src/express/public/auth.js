@@ -1,6 +1,6 @@
 var userPool = new AmazonCognitoIdentity.CognitoUserPool({
-	UserPoolId: 'COGNITO_POOL', // 'COGNITO-POOL' und 'COGNITO-CLIENT' (- ist _)! 
-	ClientId: 'COGNITO_CLIENT' // werden durch das www script ersetzt
+	UserPoolId: 'eu-central-1_HPjhOuFnW', // 'COGNITO-POOL' und 'COGNITO-CLIENT' (- ist _)! 
+	ClientId: '3duef9srrqag2nqbu373egbrvo' // werden durch das www script ersetzt
 });
 
 function login(callback) {

@@ -336,7 +336,7 @@
 						controller.addFile(file, file.name);
 					}
 				}
-
+				
 				var filedroparea = document.getElementById("filedroparea");
 				filedroparea.ondragover = function () { this.className = ''; return false; };
 				filedroparea.ondragend = function () { this.className = ''; return false; };
@@ -368,12 +368,12 @@
 						if (arguments[1] == 'add') {
 							var element = $(`<div data-filename="${arguments[2]}" class="w3-col s12 m6 l2 w3-card w3-margin w3-opacity-min w3-hover-opacity-off" style="transition:0.5s; margin:0; padding:0;">
 								<div class="w3-display-container zoom-button">
-									<img src="${arguments[4]}" style="width:100%">
+									<img src="${arguments[4]}" onerror="this.src='default.svg'" style="width:100%;">
 									<div class="w3-display-topright w3-display-hover w3-large w3-margin">
 										<button type="button" class="delete-button w3-red w3-animate-opacity w3-btn w3-round"><i class="fas fa-trash-alt"></i></button>
 									</div>
 									<div class="w3-display-topleft w3-display-hover w3-large w3-margin">
-										<a onclick="event.stopPropagation();" href="./getFile?windowName=${arguments[3]}&fileName=${arguments[2]}" class="download-button w3-btn w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-arrow-down"></i></a>
+										<a onclick="event.stopPropagation();" download='${arguments[2]}' href="./getStream?windowName=${arguments[3]}&fileName=${arguments[2]}" class="download-button w3-btn w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-arrow-down"></i></a>
 										<button type="button" class="w3-green w3-animate-opacity w3-btn w3-round"><i class="fas fa-search-plus"></i></button>
 									</div>
 								</div>
