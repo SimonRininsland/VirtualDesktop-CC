@@ -16,14 +16,8 @@ function addFile(windowName, file, callback, uploadEvent) {
 			callback(JSON.parse(this.responseText));
 		}
 	};
-	xhr.upload.onprogress = function(event) {
-		uploadEvent(this.fileName, 'progress', event.total, event.loaded);
-	}.bind({ fileName: file.name });
 	xhr.upload.onloadstart = function (event) {
 		uploadEvent(this.fileName, 'start');
-	}.bind({ fileName: file.name });
-	xhr.upload.onloadend = function (event) {
-		uploadEvent(this.fileName, 'end');
 	}.bind({ fileName: file.name });
 	xhr.upload.onerror = function (event) {
 		uploadEvent(this.fileName, 'error');
@@ -41,7 +35,7 @@ function addFile(windowName, file, callback, uploadEvent) {
 	xhr.send(formData);
 }
 
-function getFile(windowName, fileName, callback) {
+function listFile(windowName, callback) {
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
 		if (this.readyState == 4) {
@@ -49,21 +43,6 @@ function getFile(windowName, fileName, callback) {
 			callback(JSON.parse(this.responseText));
 		}
 	};
-	xhr.open('POST', '/getFile');
-	var formData = new FormData();
-	formData.append('fileName', fileName);
-	formData.append('windowName', windowName);
-	xhr.send(formData);
-}
-
-function listFile(windowName, callback) {
-	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
 	xhr.open('POST', '/listFile');
 	var formData = new FormData();
 	formData.append('windowName', windowName);
@@ -72,12 +51,12 @@ function listFile(windowName, callback) {
 
 function deleteFile(windowName, fileName, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/deleteFile');
 	var formData = new FormData();
 	formData.append('fileName', fileName);
@@ -87,12 +66,12 @@ function deleteFile(windowName, fileName, callback) {
 
 function addWindow(windowName, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/addWindow');
 	var formData = new FormData();
 	formData.append('windowName', windowName);
@@ -101,12 +80,12 @@ function addWindow(windowName, callback) {
 
 function deleteWindow(windowName, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/deleteWindow');
 	var formData = new FormData();
 	formData.append('windowName', windowName);
@@ -115,28 +94,28 @@ function deleteWindow(windowName, callback) {
 
 function setPermission(windowName, username, admin, read, write, del, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/setPermission');
 	var formData = new FormData();
-    formData.append('forUserPermissions', JSON.stringify(permissionsObj(admin, read, write, del)));
-    formData.append('forUser', username);
+	formData.append('forUserPermissions', JSON.stringify(permissionsObj(admin, read, write, del)));
+	formData.append('forUser', username);
 	formData.append('windowName', windowName);
 	xhr.send(formData);
 }
 
 function deletePermissions(forUser, windowName, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/deletePermissions');
 	var formData = new FormData();
 	formData.append('forUser', forUser);
@@ -146,12 +125,12 @@ function deletePermissions(forUser, windowName, callback) {
 
 function listWindows(callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/listWindows');
 	var formData = new FormData();
 	xhr.send(formData);
@@ -159,12 +138,12 @@ function listWindows(callback) {
 
 function leaveWindow(windowName, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/leaveWindow');
 	var formData = new FormData();
 	formData.append('windowName', windowName);
@@ -173,12 +152,12 @@ function leaveWindow(windowName, callback) {
 
 function getUserPermissions(windowName, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
-    };
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
+	};
 	xhr.open('POST', '/getUserPermissions');
 	var formData = new FormData();
 	formData.append('windowName', windowName);
@@ -201,11 +180,11 @@ function getWindowProperties(windowName, callback) {
 
 function setWindowProperties(windowName, public, callback) {
 	var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4) {
-            console.log(this.responseText);
-            callback(JSON.parse(this.responseText));
-        }
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4) {
+			console.log(this.responseText);
+			callback(JSON.parse(this.responseText));
+		}
 	};
 	xhr.open('POST', '/setWindowProperties');
 	var formData = new FormData();
@@ -293,8 +272,8 @@ var controller = {
 			listFile(this.windowName, (res) => {
 				if(res.status == 'error') { this.listener('error', JSON.stringify(res)); } else {
 					for(var i = 0; i < res.data.list.length; i++) {
-						// this.listener('filearea', 'add', fileName, fileLink, thumbnailLink);
-						this.listener('filearea', 'add', res.data.list[i].FileName, this.windowName, './img_snowtops.jpg');
+						// this.listener('filearea', 'add', fileName, fileLink);
+						this.listener('filearea', 'add', res.data.list[i].FileName, this.windowName);
 					}
 					if (this.permissions.del || this.permissions.admin || this.permissions.owner) {
 						this.listener('filearea', 'remove_buttons', 'show');
@@ -371,12 +350,14 @@ var controller = {
 		});
 	},
 	"addFile": function(file, fileName) {
+		this.listener('filearea', 'delete', fileName);
 		addFile(this.windowName, file, (res) => {
 			if(res.status == 'error') { this.listener('error', JSON.stringify(res)); } else {
-				this.listener('filearea', 'add', fileName, this.windowName, `thumb.${this.windowName}.${fileName}`);
+				this.listener('filearea', 'add', fileName, this.windowName);
+				this.listener('fileupload', fileName, 'end');
 			}
-		}, (name, event, total, loaded) => {
-			this.listener('fileupload', name, event, total, loaded);
+		}, (fileName, event) => {
+			this.listener('fileupload', fileName, event);
 		});
 	},
 	// desktop operations

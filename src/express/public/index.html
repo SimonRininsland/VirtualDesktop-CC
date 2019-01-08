@@ -252,7 +252,7 @@
 			<div class="w3-margin" style="color: #ccc; height: 500px; width: auto; border: 4px; border-style: dashed; border-radius: 25px; text-align: center; line-height: 500px" id="filedroparea">
 				drag and drop files here
 			</div>
-			<div id="progress_bars" class="w3-margin"></div>
+			<div id="progress" class="w3-margin"></div>
 		</div>
 		<!-- ----------------------------------- -->
 		<!-- SCRIPT ---------------------------- -->
@@ -368,7 +368,7 @@
 						if (arguments[1] == 'add') {
 							var element = $(`<div data-filename="${arguments[2]}" class="w3-col s12 m6 l2 w3-card w3-margin w3-opacity-min w3-hover-opacity-off" style="transition:0.5s; margin:0; padding:0;">
 								<div class="w3-display-container zoom-button">
-									<img src="${arguments[4]}" onerror="this.src='default.svg'" style="width:100%;">
+									<img src="./getThumbFile?windowName=${arguments[3]}&fileName=${arguments[2]}" onerror="this.src='default.svg'" style="width:100%;">
 									<div class="w3-display-topright w3-display-hover w3-large w3-margin">
 										<button type="button" class="delete-button w3-red w3-animate-opacity w3-btn w3-round"><i class="fas fa-trash-alt"></i></button>
 									</div>
@@ -483,20 +483,14 @@
 						console.log(arguments);
 						var name = arguments[1];
 						var event = arguments[2];
-						progressBarContainer = $("#progress_bars").find(`[data-filename="${name}"]`);
-						if(event == 'progress') {
-							var total = arguments[3];
-							var loaded = arguments[4];
-							var percentage = ~~(loaded / total * 100);
-							progressBarContainer.find("div").css("width", percentage + "%");
-							progressBarContainer.find("div").html(`${name}: ${loaded} / ${total} (${percentage})%`);
-						} else if(event == 'start') {
-							$("#progress_bars").append($(`<div class="w3-light-grey w3-xlarge w3-center" data-filename="${name}"><div class="w3-container w3-green"></div></div>`));
+						progressContainer = $("#progress").find(`[data-filename="${name}"]`);
+						if(event == 'start') {
+							$("#progress").append($(`<span data-filename="${name}"><img src="loading.gif"><span class="w3-padding">${name}</span></span>`));
 						} else if(event == 'end') {
-							progressBarContainer.remove();
+							progressContainer.remove();
 						} else {
 							alert(`File '${name}' ${event}`);
-							progressBarContainer.remove();
+							progressContainer.remove();
 						}
 					}
 				};

@@ -277,6 +277,29 @@ function getFileS3(dis, done) {
 	}
 }
 
+function getThumbFileS3(dis, done) {
+	try {
+		var get = {
+			Bucket: process.env.THUMB_BUCKET,
+			Key: dis.map.windowName + "." + dis.map.fileName
+		};
+		AWS.s3.getObject(get, function(err, data) {
+			if(err) {
+				dis.errors.push(error("ressource", "failed to obtain file from storage", err));
+				done();
+			} else {
+				dis.result.body = data.Body;
+				dis.result.fileName = dis.map.fileName;
+				dis.result.length = data.ContentLength;
+				done();
+			}
+		});
+	} catch (err) { 
+		dis.errors.push(error("exception", "failed to obtain file from storage", err));
+		done();
+	}
+}
+
 function getStreamS3(dis, done) {
 	try {
 		dis.result.fileName = dis.map.fileName;
@@ -695,6 +718,16 @@ module.exports = {
 			"fileName": fileName
 		};
 		dispatch([[checkParams], [getPermissions], [checkPermissions("read || admin || owner")], [getFileS3]], map, (data) => {
+			callback(reply(data));
+		});
+	},
+	getThumbFile: function(username, windowName, fileName, callback) {
+		var map = { 
+			"username": username, 
+			"windowName": windowName, 
+			"fileName": fileName
+		};
+		dispatch([[checkParams], [getPermissions], [checkPermissions("read || admin || owner")], [getThumbFileS3]], map, (data) => {
 			callback(reply(data));
 		});
 	},
