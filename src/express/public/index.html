@@ -88,7 +88,7 @@
 				</div>
 				<form class="w3-container w3-padding-16">
 					<div class="w3-section">
-						<label><strong>Window Name: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Window Name" id="add_windowname" required>
+						<label><strong>Desktop Name: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Desktop Name" id="add_windowname" required>
 					</div>
 				</form>
 				<div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
@@ -198,7 +198,7 @@
 			</div>
 		</div>
 		<!-- ----------------------------------- -->
-		<!-- X WINDOW MODAL --------------------------- -->
+		<!-- X WINDOW MODAL -------------------- -->
 		<!-- ----------------------------------- -->
 		<div id="x_window_modal" class="w3-modal">
 			<div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:400px">
@@ -209,6 +209,25 @@
 				<div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
 					<button type="button" class="w3-button w3-red" onclick="showModal('x_window_modal', false); x_window()">Yes</button>
 					<button type="button" class="w3-button w3-green" onclick="showModal('x_window_modal', false)">No</button>
+				</div>
+			</div>
+		</div>
+		<!-- ----------------------------------- -->
+		<!-- SWITCH WINDOW MODAL---------------- -->
+		<!-- ----------------------------------- -->
+		<div id="switch_desktop_modal" class="w3-modal">
+			<div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:400px">
+				<div class="w3-center"><br>
+					<span onclick="showModal('switch_desktop_modal', false)" class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal"><i class="fas fa-times"></i></span>
+				</div>
+				<form class="w3-container w3-padding-16">
+					<div class="w3-section">
+						<label><strong>Desktop: </strong></label><input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter Desktop" id="switch_desktop" required>
+						
+					</div>
+				</form>
+				<div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
+					<button type="button" class="w3-button w3-green" onclick="switchDesktop(); showModal('switch_desktop_modal', false)">Switch</button>
 				</div>
 			</div>
 		</div>
@@ -235,11 +254,11 @@
 			<input id="sidebar_add_file_input" type="file" style="display:none;" multiple />
 			<!--<button class="w3-button w3-bar-item w3-light-grey"><i class="fas fa-folder-plus"></i><span style="margin-left: 1em;">Add File</span></button> -->
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('add_user_modal', true)" id="sidebar_add_user"><i class="fas fa-user-plus"></i><span style="margin-left: 1em;">Add User</span></button> 
-			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('edit_user_modal', true)" id="sidebar_edit_user"><i class="fas fa-user-edit"></i><span style="margin-left: 1em;">Edit User</span></button> 
+			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('edit_user_modal', true); clearEditCheckBoxes()" id="sidebar_edit_user"><i class="fas fa-user-edit"></i><span style="margin-left: 1em;">Edit User</span></button> 
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('remove_user_modal', true)" id="sidebar_remove_user"><i class="fas fa-user-times"></i><span style="margin-left: 1em;">Remove User</span></button>
 			<button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('window_settings_modal', true)" id="sidebar_window_settings"><i class="fas fa-cogs"></i><span style="margin-left: 1em;">Desktop Settings</span></button> 
-			<span><button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('add_window_modal', true)" id="sidebar_add_window"><i class="fas fa-plus"></i><span style="margin-left: 1em;">Add Window</span></button></span>
-			<span><button class="w3-button w3-bar-item w3-light-grey" id="sidebar_desktops"><i class="fas fa-desktop"></i><span style="margin-left: 1em;">Desktops</span></button></span>
+			<span><button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('add_window_modal', true)" id="sidebar_add_window"><i class="fas fa-plus"></i><span style="margin-left: 1em;">Add Desktop</span></button></span>
+			<span><button class="w3-button w3-bar-item w3-light-grey" onclick="showModal('switch_desktop_modal', true)" id="sidebar_desktops"><i class="fas fa-desktop"></i><span style="margin-left: 1em;">Switch Desktops</span></button></span>
 			<span id="desktops"></span>
 		</div>
 		<!-- ----------------------------------- -->
@@ -295,6 +314,10 @@
 				controller.removeUser($("#remove_user_permissions").find(":selected").text());
 			}
 
+			function switchDesktop() {
+				controller.openDesktop($("#switch_desktop").val());
+			}
+			
 			function addUserPermissions() {
 				controller.addChangePermission($("#add_username").val(),
 					$("#add_cb_admin").is(':checked'),
@@ -323,6 +346,14 @@
 
 			function submit_files() {
 				console.log(document.getElementById("sidebar_add_file"));
+			}
+			
+			function clearEditCheckBoxes() {
+				$("#edit_cb_admin").prop('checked', false);
+				$("#edit_cb_read").prop('checked', false);
+				$("#edit_cb_write").prop('checked', false);
+				$("#edit_cb_delete").prop('checked', false);
+				$("#edit_user_permissions").prop("selectedIndex", -1);
 			}
 			
 			$(document).ready(function () {
@@ -434,10 +465,10 @@
 							var permissions = $('<div class="w3-display-bottomleft" style="margin:0px 0px 10px 20px;"></div>');
 							var del = $('<div class="w3-display-right" style="margin:0px 20px 0px 0px;"><i class="fas fa-times"></i></div>');
 							if (arguments[3]) { permissions.append('<i class="w3-small fas fa-star"></i> '); } else { permissions.append('<i class="w3-small fas fa-star w3-text-grey"></i> '); }
-							if (arguments[4]) { permissions.append('<i class="w3-small fas fa-unlock-alt"></i> '); } else { permissions.append('<i class="w3-small fas fa-unlock-alt w3-text-grey"></i> '); }
-							if (arguments[5]) { permissions.append('<i class="w3-small far fa-eye"></i> '); } else { permissions.append('<i class="w3-small far fa-eye w3-text-grey"></i> '); }
-							if (arguments[6]) { permissions.append('<i class="w3-small fas fa-pen"></i> '); } else { permissions.append('<i class="w3-small fas fa-pen w3-text-grey"></i> '); }
-							if (arguments[7]) { permissions.append('<i class="w3-small fas fa-trash-alt"></i> '); } else { permissions.append('<i class="w3-small fas fa-trash-alt w3-text-grey"></i> '); }
+							if (arguments[3] || arguments[4]) { permissions.append('<i class="w3-small fas fa-unlock-alt"></i> '); } else { permissions.append('<i class="w3-small fas fa-unlock-alt w3-text-grey"></i> '); }
+							if (arguments[3] || arguments[4] || arguments[5]) { permissions.append('<i class="w3-small far fa-eye"></i> '); } else { permissions.append('<i class="w3-small far fa-eye w3-text-grey"></i> '); }
+							if (arguments[3] || arguments[4] || arguments[6]) { permissions.append('<i class="w3-small fas fa-pen"></i> '); } else { permissions.append('<i class="w3-small fas fa-pen w3-text-grey"></i> '); }
+							if (arguments[3] || arguments[4] || arguments[7]) { permissions.append('<i class="w3-small fas fa-trash-alt"></i> '); } else { permissions.append('<i class="w3-small fas fa-trash-alt w3-text-grey"></i> '); }
 							$(del).on('click', xWindow.bind({ windowName: arguments[2], owner: arguments[3] }));
 							$(element).on('click', openDesktop.bind({ windowName: arguments[2] }));
 							element.append(name).append(permissions).append(del);
@@ -464,6 +495,8 @@
 							$("#edit_user_permissions").empty();
 							$("#remove_user_permissions").empty();
 						}
+						$("#edit_user_permissions").prop("selectedIndex", -1);
+						$("#remove_user_permissions").prop("selectedIndex", -1);
 					} else if (arguments[0] == 'window_properties') {
 						$("#window_settings_public_cb").attr('checked', arguments[1]);
 					} else if (arguments[0] == 'filedrop') {
