@@ -109,33 +109,136 @@ Es gibt also
 \caption{Username1 ist Owner und besitzt drei Desktops. DESKTOP1 teilt Username1 mit Username4 und Username7. Der DESKTOP2 wird nur mit Username7 geteilt. Den Usern wurden individuell für diese Desktops Rechte zugeteilt. Den DESKTOP3 kann nur der Owner selbst betrachten.}
 \end{figure}
 
+\chapter{Weg in die Cloud}
+MIT Sections
+-was man alles brauch um einen webservice zu bauen: SERVER mit db und Webserver (Aufbau klassischer Webservice)
+- Skalierbarkeitswunsch: aufsplittung des SERVERS in Speicher, Rechenleistung, DB, Authentifizierung, ... UND DESHLAB GIBT ES ZB. NOSQL DATENBANKEN
+- outsourcing zu einem cloudservice/beschreibung kontrollverlust IaaS-PaaS-SaaS-FaaS (wieso man es in andere hände gibt/Kosten/..)
+- aufllistung von einigen cloudanbieter AWS, Azure, Google...
 
 
 \chapter{Architektur}
-einleitung für archtektur.
+%- Festlegung auf AWS
+%- architeturdiagramm
+%- Struktur DB und Struktur Anwendungskommunikation- Zusammenhang
 
-\section{unterüberschriften? mehrere}
-- Festlegung auf AWS\\
-- Erklären was Hardware Architektur einschließt\\
-- Was benötigen wir an Services (Speicher, DB, Auth, Scale)\\
-- Welche Systeme und Services nutzen wir iin AWS mit kurzer Erklärung (s3, dyndb, cognito, beanstalk, lambda)\\
-- Architektur zeigen und einzeln mit langer Erklärung wie Services zusammenhängen und miteinander arbeiten. Inkl aller Subservices die EBS anlegt.(LoadBalancer, Security Groups, S3 Bucket für EB Code, Cloudwatch)\\
-- Welche services davon müssen warum skaliert werden
+Im folgendem wird die Architektur der Webanwendung VirtualDesktop unter Verwendung von Amazon Web Services als Architekturdiagramm dargestellt.
 
-\section{architeturdiagramm?}
+\textbf{[BILD EINFÜGEN TODO]}
 
-\chapter{Umsetzung Software?}
-Einleitung Anwendung
 
-\section{NodeJS und Express}
-- Was ist das. Wofür brauchen wir das\\
-- Erklären wieso wir das nutzen.\\
-- Erklären Zusammenhang JSON zu Backend datentransform und weswegen NodeJS deswegen gut.
+\section{Elastic Beanstalk Konfiguration}
+%-config file
+%-  Inkl aller Subservices die EBS anlegt.(LoadBalancer, Security Groups, S3 Bucket für EB Code, Cloudwatch)
+%- was es alles mit drin hat aber nebenbei erwähnen immer wieso und
+- [WOFÜR IST DIE DATEI GUT? EINLEITEND ERKLÄREN]
 
-\section{Frontend JS / jQuery}
-- Was sind das für Technologien. Wofür brauchen wir das\\
-- Erklären wieso wir das nutzen. \\
-- Erklären Zusammenhang JSON zu Backend Datentransfer und weswegen NodeJS deswegen gut.
+
+
+\subsection{Authentifizierungsservice Cognito}
+Zur Authentifizierung von Nutzern wird der AWS Cognito verwendet. Der Nutzerpool \textit{Cognitopool} vom Typ \textit{AWS::Cognito::UserPool} ist so konfiguriert, dass bei der Registrierung eines neuen Nutzers ein Passwort angegeben werden muss, welches die Minimalvorrausetzung eines AWS-Cognito-Passworts erfüllt (Zeichenlänge von Sechs[QUELLE: AWS COGNITO]). Für die Registriereung muss der Nutzer sich verifizieren. Dies geschieht hier über Email,in der der Nutzer seinen Bestätigungscode erhält. Die Formatierung dieser Email wird in \textit{EmailVerificationMessage} und \textit{EmailVerificationSubject} angegeben.  
+%COGNITO MINLÄNGE
+%https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-passwordpolicy.html
+
+ 
+
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+CognitoPool:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            AutoVerifiedAttributes:
+                -
+                    "email"
+            EmailVerificationMessage: "Here is your code: {####}"
+            EmailVerificationSubject: "Verify your E-Mail for VD"
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: "6"
+                    RequireLowercase: false
+                    RequireNumbers: false
+                    RequireSymbols: false
+                    RequireUppercase: false
+
+\end{lstlisting}
+\bigskip
+\noindent Um den \textit{UserPool} verwenden zu können, benötigt dieser einen Benutzer, den \textit{AWS::Cognito::UserPoolClient}. Dieser wird über die Property \textit{UserPoolId} an den angegeben \textit{UserPool} gebunden, in diesem Fall wird eine Referenz auf den zuvor angelegten UserPool mit dem Namen \textit{CognitoPool} angegeben. Die Property \textit{GenerateSecret} wird hier auf \textit{false} gesetzt, da die clientseitig verwendete Amazon Cognito Identity-SDK für JavaScript keine client secrets unterstützt [QUELLE: generateSec].
+%generateSec QUelle
+%https://github.com/aws-amplify/amplify-js/tree/master/packages/amazon-cognito-identity-js
+
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+    CognitoClient:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            GenerateSecret: false
+            UserPoolId: '{"Ref" : "CognitoPool"}'
+\end{lstlisting} 
+
+
+\subsection{Could-Speicher S3}
+Durch folgende Beschreibung in der Konfiguration wird ein Cloud-Speicher des Typs \textit{AWS::S3::Bucket} angelegt.
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+Bucket:
+        Type: AWS::S3::Bucket
+\end{lstlisting}          
+
+
+\subsection{Datenbank DynamoDB}
+Zur Erstellung einer Datenbanktabelle in der DynamoDB wird hier exemplarisch an der \textit{Permissions}-Tabelle vom Typ \textit{AWS::DynamoDB::Table} gezeigt. Anders als bei klassischen SQL-Datenbanken kann ein Eintrag in einer DynamoDB-Tabelle beliebige Felder beinhalten. Diese werden lediglich über den Schlüssel abgefragt. Um den Schlüssel einer Tabelle zu definieren muss der Attributtyp, der Attributname und der Keytyp innerhalb der AttributeDefinitions und KeySchema angegeben werden. Diese beiden Felder sind erforderlich, müssen also angegeben werden. Das selbe gilt für \textit{ProvisionedThroughput}[QUELLE allg.DYNDB ].
+Dies bedeutet, dass die Skalierung kann nicht bei der Erstellung durch CloudFormation oder EBS eingestellt werden. Um die DynamoDB zu skalieren muss \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} im AWS-Account aktiv sein. Falls \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} bereits bei der Erstellung durch EB-Deploy aktiviert war skalieren die Tabellen ansonsten nicht. Das Autoscaling für die Tabellen kann dann jedoch nachträglich über die Management-Console eingestellt werden. Nähere Informationen hierzu sind in [QUELLE: AUTOSCALING] zu finden.
+
+%QUELLE allg.DYNDB
+%https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
+
+
+%QUELLE AUTOSCALING
+%https://docs.aws.amazon.com/de_de/amazondynamodb/latest/developerguide/AutoScaling.Console.html
+
+
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+Permissions:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            AttributeDefinitions:
+                -
+                    AttributeName: "Window"
+                    AttributeType: "S"
+                -
+                    AttributeName: "User"
+                    AttributeType: "S"
+            KeySchema:
+                -
+                    AttributeName: "Window"
+                    KeyType: "HASH"
+                -
+                    AttributeName: "User"
+                    KeyType: "RANGE"
+            ProvisionedThroughput:
+                ReadCapacityUnits: "1"
+                WriteCapacityUnits: "1"
+\end{lstlisting}
+
+
+
+\subsection{Serverless-Functions Lambda}
+
+\section{Zusammenhang der Services}
+%- über NodeJS und Express(wegen Datentransformation JSON) ...
+%- Auth und Berechtigung prüfen- setzen von Rechten
+%- wie sehen die Tabellen aus
+%- wie findet das Computing statt
+%- kurz jede api-Funktion anreißen
+%
+
+
+
+
+
+
+
+
+
+
+
 
 
 \chapter{Besonderheiten}
@@ -147,7 +250,10 @@ Einleitung dazu: Weil zu viel gemacht - nur die interessante Teile näher erklä
 %-  z.B. www Cognito
 
 Bei Elastic-Beanstalk-Projekten wird bei jedem Deploy die gesamte Umgebung mit allen AWS-Resourcen neu gestartet. Dies beinhaltet unter anderem die EC2-Instanz. Da bei Quellcodeänderungen ein Deploy erneut ausgeführt werden muss und die Instanziierung einer EC2-Instanz zeitaufwendig sein kann ist dies für die Entwicklung der Webanwendung nicht praktikabel. Aus diesem Grund wurden in Elastic-Beanstalk Referenzen[QUELLE: REF AWS] für die dynamisch angelegten Ressourcen erzeugt. Diese Referenzen können in Umgebungsvariablen der EC2-Instanzen übernommen werden, dies geschieht in der \textit{node-env-keys.config} [QUELLE: ENVI VAR].\\
-Um eine schnellere Entwicklung voranzutreiben wird dieser Umstand genutzt, indem statische Ressourcen erstellt und in die Umgebungsvariablen des Entwicklersystems hinzugefügt werden.
+Um eine schnellere Entwicklung voranzutreiben wird dieser Umstand genutzt, indem statische (nicht durch EBS-Deploy generiert) Amazon Web Services erstellt und in die Umgebungsvariablen des Entwicklersystems hinzugefügt werden.
+Hierbei ist zu beachten, dass lediglich die EC2-Instanzen durch den lokalen Rechner ersetzt werden. Anzulegende Umgebungsvariablen sind
+AWS\_ACCESS\_KEY\_ID und AWS\_SECRET\_ACCESS\_KEY mit den AWS-Credials, COGNITO\_CLIENT und COGNITO\_POOL mit der App-Client-ID eines Cognito-Clients (mit GenerateSecret=false) und der Pool-ID des dazugehörigen Cognito-Pools, FILES, PERMISSIONS und WINDOWS mit den jeweiligen Tabellennamen von DynamoDB-Tabellen mit der Struktur beschrieben in [.\textbf{TODO}.] und BUCKET sowie THUMB\_BUCKET mit den Bucket-Namen. Weiterhin muss die Lambda-Funktion wie in \textbf{LAMDBA TODO} beschrieben  für die Generierung von Thumbnails erstellt werden. Die Lambda-Funktion muss mit den Buckets verknüpft sein.  
+
 
 %REF QUELLE
 %https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-ref.html
