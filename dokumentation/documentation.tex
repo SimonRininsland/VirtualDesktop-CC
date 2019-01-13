@@ -83,6 +83,19 @@ Im Rahmen dieses Projektes ist eine Web-Anwendung unter Verwendung von Amazon We
 %- Welche Anforderungen vom Modul\\
 %- Fokus des Projekts
 
+%Es ist eine Web-Anwendung unter Verwendung von Amazon Web-Services (AWS) zu
+%entwickeln, die mindestens folgende Funktionalitäten beinhalten soll.
+%1. Eine statische Web-Seite als Startpunkt der Anwendung.
+%2. Ausgelagerte REST APIs für dynamisches Verhalten der Anwendung.
+%3. Benutzerverwaltung mit expliziten Authentifizierungs- und Autorisierungsverwaltung
+%4. Die Daten der Anwendung sollen in einer Datenbank verwaltet werden. Die SQL und
+%NoSQL Datenbanken sollen dabei passend eingesetzt werden.
+%5. Die Anwendung soll mit heterogenen Daten umgehen können. Zusätzlich zu den
+%organisatorischen Daten (Nutzerverwaltung, Anwendungslogik, etc.) müssen
+%Multimedia-Daten (Bilder, Audio, Video) integriert werden. Es muss dabei möglich
+%sein, die Multimedia-Daten entweder herunterzuladen oder zu streamen.
+%6. Die Anwendung muss horizontal skalierbar sein. (Begründung!)
+
 
 
 
@@ -95,7 +108,7 @@ Die Web-Anwendung \textit{VirtualDesktop} soll registrierten Benutzern virtuelle
 Alle Benutzer müssen sich anmelden um die Anwendung nutzen zu können. Ein Benutzer kann mehrere Desktops anlegen und diese verwalten. Das Anlegen von mehreren Desktops ist zum Beispiel dann sinnvoll, wenn die Desktops mit unterschiedlichen Personengruppen geteilt werden sollen.
 Für jeden angelegten Desktop, kann der Ersteller andere Nutzer hinzufügen und ihnen verschiedene Rechte an seinem Desktop zuweisen.\\
 Mit zugewiesenen Leserechten kann der Nutzer Dateien betrachten und herunterladen, mit Schreibrechten darf der Nutzer auch eigene Dateien auf diesem Desktop ablegen. Dem Nutzer müssen explizit Löschrechte zugewiesen werden, um Dateien von fremden Desktops entfernen zu können.\\
-Nutzer können auch Admin-Rechte erhalten, sodass diese für den Desktop Nutzerrechte bearbeiten und neue Nutzer hinzufügen dürfen. Ein angelegter Desktop kann aber ausschließlich nur vom Ersteller entfernt werden.\\ 
+Nutzer können auch Admin-Rechte erhalten, sodass diese für den Desktop Nutzerrechte bearbeiten und neue Nutzer hinzufügen dürfen. Ein angelegter Desktop kann aber nur vom Ersteller selbst entfernt werden.\\ 
 Es gibt also
 \begin{itemize} 
 \item[] \textbf{Owner}, die einen oder mehrere Desktops angelegt haben, zwischen diesen wechseln können und andere Nutzer durch Zuweisung von Lese- , Schreib- und Löschrechten zu ihren Desktops hinzufügen dürfen. Sie besitzen für ihre eigenen Desktops alle Rechte. Sie können auch Admin-Rechte, für die Bearbeitung von Nutzerrechten, vergeben.
@@ -109,7 +122,13 @@ Es gibt also
 \caption{Username1 ist Owner und besitzt drei Desktops. DESKTOP1 teilt Username1 mit Username4 und Username7. Der DESKTOP2 wird nur mit Username7 geteilt. Den Usern wurden individuell für diese Desktops Rechte zugeteilt. Den DESKTOP3 kann nur der Owner selbst betrachten.}
 \end{figure}
 
-\chapter{Weg in die Cloud}
+\noindent Ein Anwender, der nicht explizit jedem mit dem er seinen Desktop zu teilen vermag, Rechte zuweisen möchte, weil es sich z.B. um eine sehr große Anzahl von Personen handelt, kann als \textit{Owner} seinen Desktop auf public setzen.
+Da Desktopnamen in \textit{VirtualDesktop} global eindeutig sind, kann dieser Desktop dann über den Desktopnamen geteilt und gefunden werden.
+\textit{User} haben auf einem, auf public gesetzten, Desktop nur Leserechte, außer ihnen wurden explizit weitere Rechte zugewiesen. 
+Nur dem \textit{Owner} ist es erlaubt den Desktop wieder auf privat zu setzen, auch \textit{Usern} mit Admin-Rechten für diesen Desktop ist dies nicht gestattet.
+ 
+
+\chapter{Der Weg in die Cloud}
 MIT Sections
 -was man alles brauch um einen webservice zu bauen: SERVER mit db und Webserver (Aufbau klassischer Webservice)
 - Skalierbarkeitswunsch: aufsplittung des SERVERS in Speicher, Rechenleistung, DB, Authentifizierung, ... UND DESHLAB GIBT ES ZB. NOSQL DATENBANKEN
@@ -121,7 +140,8 @@ MIT Sections
 %- Festlegung auf AWS
 %- architeturdiagramm
 %- Struktur DB und Struktur Anwendungskommunikation- Zusammenhang
-
+HIER DEN AUFBAU ERKLÄREN, DASS IN 3.2 DER ZSMHANG DER SERVICES ERKLÄRT WIRD
+- und irgendwo eine tolle Grafik wie die Windows und alles in der DynamoDb und verknüfung mit S3...
 Im folgendem wird die Architektur der Webanwendung VirtualDesktop unter Verwendung von Amazon Web Services als Architekturdiagramm dargestellt.
 
 \textbf{[BILD EINFÜGEN TODO]}
