@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  VirtualDesktop:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      Description: AWS Elastic Beanstalk Sample Application
+  sampleApplicationVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties:
+      ApplicationName:
+        Ref: VirtualDesktop

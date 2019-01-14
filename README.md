@@ -22,9 +22,20 @@
     - Open in default Browser with ``eb open``
     - To see elastic Beans Instance visit: https://eu-central-1.console.aws.amazon.com/elasticbeanstalk/home?region=eu-central-1#/applications
 ### Deployment on AWS
-- Start Env ``eb create --sample VirtualDesktop-env`` 
+- Start Env ``eb create VirtualDesktop-env`` 
 - Start Depoloyment with ``eb deploy``
 - When you're done working, terminate with ``eb terminate``
 
 ## Deployment Documentation
 - https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+
+- https://noise.getoto.net/tag/amazon-sqs/
+- https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-properties-elasticbeanstalk-configurationtemplate-configurationoptionsetting.html
+- https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/using-iam-template.html
+
+Extrem wichtig: 
+- https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-resource-beanstalk-configurationtemplate.html
+- https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/quickref-elasticbeanstalk.html
+- https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html
+
+aws cloudformation create-stack --stack-name VirtualDesktop --template-body ./src/setup-cf.yml
