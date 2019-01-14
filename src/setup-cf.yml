@@ -1,11 +1,219 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-  VirtualDesktop:
-    Type: AWS::ElasticBeanstalk::Application
-    Properties:
-      Description: AWS Elastic Beanstalk Sample Application
-  sampleApplicationVersion:
-    Type: AWS::ElasticBeanstalk::ApplicationVersion
-    Properties:
-      ApplicationName:
-        Ref: VirtualDesktop
+    Files:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            AttributeDefinitions:
+                -
+                    AttributeName: "File"
+                    AttributeType: "S"
+                -
+                    AttributeName: "WindowName"
+                    AttributeType: "S"
+            KeySchema:
+                -
+                    AttributeName: "File"
+                    KeyType: "HASH"
+                -
+                    AttributeName: "WindowName"
+                    KeyType: "RANGE"
+            ProvisionedThroughput:
+                ReadCapacityUnits: "1"
+                WriteCapacityUnits: "1"
+    Windows:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            AttributeDefinitions:
+                -
+                    AttributeName: "WindowName"
+                    AttributeType: "S"
+            KeySchema:
+                -
+                    AttributeName: "WindowName"
+                    KeyType: "HASH"
+            ProvisionedThroughput:
+                ReadCapacityUnits: "1"
+                WriteCapacityUnits: "1"
+    Permissions:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            AttributeDefinitions:
+                -
+                    AttributeName: "Window"
+                    AttributeType: "S"
+                -
+                    AttributeName: "User"
+                    AttributeType: "S"
+            KeySchema:
+                -
+                    AttributeName: "Window"
+                    KeyType: "HASH"
+                -
+                    AttributeName: "User"
+                    KeyType: "RANGE"
+            ProvisionedThroughput:
+                ReadCapacityUnits: "1"
+                WriteCapacityUnits: "1"
+    Code:
+        Type: AWS::S3::Bucket
+    Bucket:
+        Type: AWS::S3::Bucket
+    ThumbBucket:
+        Type: AWS::S3::Bucket
+    CognitoPool:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            AutoVerifiedAttributes:
+                -
+                    "email"
+            EmailVerificationMessage: "Here is your code: {####} =)"
+            EmailVerificationSubject: "Verify your E-Mail for VirtualDesktop"
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: "6"
+                    RequireLowercase: false
+                    RequireNumbers: false
+                    RequireSymbols: false
+                    RequireUppercase: false
+    CognitoClient:   
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            GenerateSecret: false
+            UserPoolId:
+                Ref: CognitoPool
+    ElasticBS:
+        Type: AWS::ElasticBeanstalk::Application
+        Properties:
+            Description: ElasticBeanstalk VirtualDesktop
+    ApplicationVersionElasticBS:
+        Type: AWS::ElasticBeanstalk::ApplicationVersion
+        Properties:
+            ApplicationName:
+                Ref: ElasticBS
+            Description: ElasticBeanstalk VirtualDesktop Application Version
+            SourceBundle:
+                S3Bucket: filebucketvirtualdesktop-code
+                S3Key: ebs.zip
+    ConfigurationElasticBS:
+        Type: AWS::ElasticBeanstalk::ConfigurationTemplate
+        Properties:
+            ApplicationName:
+                Ref: ElasticBS
+            Description: AWS ElasticBeanstalk VirtualDesktop Configuration
+            OptionSettings:
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: AWS_ACCESS_KEY_ID
+                Value: 'AKIAIH7GDSTC5T5B6PXQ'
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: AWS_SECRET_ACCESS_KEY
+                Value: 'io4b8PLcAxK/yJlxs/HcxuZZgWNh4JpKBqXXo/zx'
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: BUCKET
+                Value:
+                    Ref: Bucket
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: THUMB_BUCKET
+                Value:
+                    Ref: ThumbBucket
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: WINDOWS
+                Value:
+                    Ref: Windows
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: FILES
+                Value:
+                    Ref: Files
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: PERMISSIONS
+                Value:
+                    Ref: Permissions
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: COGNITO_POOL
+                Value:
+                    Ref: CognitoPool
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: COGNITO_CLIENT
+                Value:
+                    Ref: CognitoClient
+            -
+                Namespace: aws:elasticbeanstalk:container:nodejs
+                OptionName: NodeCommand
+                Value: "npm start"
+            -
+                Namespace: aws:autoscaling:asg
+                OptionName: MinSize
+                Value: '1'
+            -
+                Namespace: aws:elasticbeanstalk:environment
+                OptionName: EnvironmentType
+                Value: LoadBalanced
+            SolutionStackName: "64bit Amazon Linux 2018.03 v4.7.1 running Node.js"
+    EnvironmentElasticBS:
+        Type: AWS::ElasticBeanstalk::Environment
+        Properties:
+            ApplicationName:
+                Ref: ElasticBS
+            Description: AWS ElasticBeanstalk VirtualDesktop Environment
+            TemplateName:
+                Ref: ConfigurationElasticBS
+            VersionLabel:
+                Ref: ApplicationVersionElasticBS
+            OptionSettings:
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: AWS_ACCESS_KEY_ID
+                Value: 'AKIAIH7GDSTC5T5B6PXQ'
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: AWS_SECRET_ACCESS_KEY
+                Value: 'io4b8PLcAxK/yJlxs/HcxuZZgWNh4JpKBqXXo/zx'
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: BUCKET
+                Value:
+                    Ref: Bucket
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: THUMB_BUCKET
+                Value:
+                    Ref: ThumbBucket
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: WINDOWS
+                Value:
+                    Ref: Windows
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: FILES
+                Value:
+                    Ref: Files
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: PERMISSIONS
+                Value:
+                    Ref: Permissions
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: COGNITO_POOL
+                Value:
+                    Ref: CognitoPool
+            -
+                Namespace: aws:elasticbeanstalk:application:environment
+                OptionName: COGNITO_CLIENT
+                Value:
+                    Ref: CognitoClient
+            -
+                Namespace: aws:elasticbeanstalk:container:nodejs
+                OptionName: NodeCommand
+                Value: "npm start"
+                
+                

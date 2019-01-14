@@ -1,0 +1,1 @@
+aws cloudformation create-stack --stack-name VirtualDesktop --template-body file://./src/setup-cf.yml
