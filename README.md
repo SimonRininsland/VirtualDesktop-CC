@@ -37,5 +37,6 @@ Extrem wichtig:
 - https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-resource-beanstalk-configurationtemplate.html
 - https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/quickref-elasticbeanstalk.html
 - https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html
+- https://forums.aws.amazon.com/thread.jspa?messageID=801843&tstart=0 (iam rolle)
 
 aws cloudformation create-stack --stack-name VirtualDesktop --template-body ./src/setup-cf.yml
