@@ -61,10 +61,6 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: "1"
                 WriteCapacityUnits: "1"
-    Bucket:
-        Type: AWS::S3::Bucket
-    ThumbBucket:
-        Type: AWS::S3::Bucket
     CognitoPool:
         Type: AWS::Cognito::UserPool
         Properties:
@@ -180,3 +176,95 @@ Resources:
                 Namespace: aws:elasticbeanstalk:container:nodejs
                 OptionName: NodeCommand
                 Value: "npm start"
+    LambdaRole: 
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                - 
+                    Effect: Allow
+                    Principal:
+                        Service:
+                        - lambda.amazonaws.com
+                    Action: sts:AssumeRole
+            Path: "/"
+    LambdaPermission:
+        Type: "AWS::Lambda::Permission"
+        Properties: 
+            Action: "lambda:InvokeFunction"
+            FunctionName:
+                Fn::GetAtt:
+                - LambdaThumbnail
+                - Arn
+            Principal: "s3.amazonaws.com"
+    LambdaPolicy:
+        DependsOn:
+        - LambdaRole
+        Type: AWS::IAM::Policy
+        Properties:
+            PolicyName: LambdaRolePolicy
+            Roles:
+            - Ref: LambdaRole
+            PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                - 
+                    Effect: Allow
+                    Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                    Resource:
+                    - arn:aws:logs:*:*:*
+                - 
+                    Effect: Allow
+                    Action:
+                    - s3:GetObject
+                    - s3:PutObject
+                    Resource:
+                    - arn:aws:s3:::*
+                - 
+                    Effect: Allow
+                    Action:
+                    - xray:PutTraceSegments
+                    - xray:PutTelemetryRecords
+                    Resource: '*'
+    LambdaThumbnail:
+        Type: "AWS::Lambda::Function"
+        Properties: 
+            Handler: "index.handler"
+            Role: 
+                Fn::GetAtt: 
+                    - "LambdaRole"
+                    - "Arn"
+            Code:
+                S3Bucket:
+                    Ref: CodeBucket
+                S3Key: "lambda.zip"
+            MemorySize: "1024"
+            FunctionName: CreatePhotoThumbnail
+            Runtime: "nodejs8.10"
+            Timeout: "10"
+            TracingConfig:
+                Mode: "Active"
+    Bucket:
+        Type: AWS::S3::Bucket
+        DependsOn:
+            - LambdaThumbnail
+            - LambdaPermission
+        Properties:
+            NotificationConfiguration:
+                LambdaConfigurations:
+                - 
+                    Function:
+                        Fn::GetAtt:
+                        - LambdaThumbnail
+                        - Arn
+                    Event: s3:ObjectCreated:*
+    ThumbBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: !Sub
+                - thumbs${ResBucket}
+                - ResBucket: !Ref Bucket

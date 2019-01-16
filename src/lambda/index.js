@@ -13,14 +13,15 @@ var MAX_HEIGHT = 100;
 var s3 = new AWS.S3();
  
 exports.handler = function(event, context, callback) {
+    console.log(event);
     // Read options from the event.
     console.log("Reading options from event:\n", util.inspect(event, {depth: 5}));
     var srcBucket = event.Records[0].s3.bucket.name;
     // Object key may have spaces or unicode non-ASCII characters.
     var srcKey    =
     decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));  
-    var dstBucket = srcBucket + "resized";
-    var dstKey    = "resized-" + srcKey;
+    var dstBucket = "thumbs"+srcBucket;
+    var dstKey    = srcKey;
 
     // Sanity check: validate that source and destination are different buckets.
     if (srcBucket == dstBucket) {
@@ -35,7 +36,7 @@ exports.handler = function(event, context, callback) {
         return;
     }
     var imageType = typeMatch[1];
-    if (imageType != "jpg" && imageType != "png") {
+    if (imageType != "jpg" && imageType != "png" && imageType != "jpeg") {
         callback('Unsupported image type: ${imageType}');
         return;
     }
