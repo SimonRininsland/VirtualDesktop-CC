@@ -6,8 +6,6 @@ Parameters:
         Type: String
     AwsAccessKeyId: 
         Type: String
-    DomainName: 
-        Type: String
 Resources:
     Files:
         Type: AWS::DynamoDB::Table
@@ -270,16 +268,3 @@ Resources:
             BucketName: !Sub
                 - thumbs${ResBucket}
                 - ResBucket: !Ref Bucket
-    RouteDNS:
-        Type: AWS::Route53::RecordSet
-        Properties:
-            HostedZoneName: !Sub
-                - ${DName}.
-                - DName: !Ref DomainName
-            Name: !Sub
-                - www.${DName}.
-                - DName: !Ref DomainName
-            Type: CNAME
-            TTL: 900
-            ResourceRecords:
-            - !GetAtt EnvironmentElasticBS.EndpointURL

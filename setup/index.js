@@ -42,20 +42,38 @@ if(argv[0] == 'create' && argv[1] && argv[2] && argv[3]) {
 					s3.upload({Bucket: bucketName, Key: 'lambda.zip', Body: lambdaPassZip}, function(err, data) {
 						if(err) {console.log("test2");console.log(err);} else {
 							console.log("creating stack");
-							var cloudformationparams = {
-								StackName: argv[3],
-								Parameters: [ 
-									{ ParameterKey: 'AwsAccessKeyId', ParameterValue: argv[1]},
-									{ ParameterKey: 'AwsSecretAccessKey', ParameterValue: argv[2]},
-									{ ParameterKey: 'CodeBucket', ParameterValue: bucketName}
-								],
-								Capabilities: ['CAPABILITY_NAMED_IAM'],
-								TemplateBody: require('fs').readFileSync('./template.yml', 'utf8')
-							};
+							// check if Domain is given
+							if (argv[4]) {
+								var cloudformationparams = {
+									StackName: argv[3],
+									Parameters: [ 
+										{ ParameterKey: 'AwsAccessKeyId', ParameterValue: argv[1]},
+										{ ParameterKey: 'AwsSecretAccessKey', ParameterValue: argv[2]},
+										{ ParameterKey: 'CodeBucket', ParameterValue: bucketName},
+										{ ParameterKey: 'DomainName', ParameterValue: argv[4]}
+									],
+									Capabilities: ['CAPABILITY_NAMED_IAM'],
+									TemplateBody: require('fs').readFileSync('./template.yml', 'utf8')
+								};
+							} else {
+								var cloudformationparams = {
+									StackName: argv[3],
+									Parameters: [ 
+										{ ParameterKey: 'AwsAccessKeyId', ParameterValue: argv[1]},
+										{ ParameterKey: 'AwsSecretAccessKey', ParameterValue: argv[2]},
+										{ ParameterKey: 'CodeBucket', ParameterValue: bucketName}
+									],
+									Capabilities: ['CAPABILITY_NAMED_IAM'],
+									TemplateBody: require('fs').readFileSync('./template-no-route.yml', 'utf8')
+								};
+							}
 							cloudformation.createStack(cloudformationparams, function(err, data) {
 								if(err) { console.log(err); } else {
 									console.log('StackName: '+argv[3]);
 									console.log('CodeBucket: '+bucketName);
+									if (argv[4]) {
+										console.log('Domain: '+argv[4]);
+									}
 									console.log('Stack is in creation: See aws cloudformation console for further information');
 									console.log('https://eu-central-1.console.aws.amazon.com/cloudformation');
 									console.log('To delete:');
@@ -90,8 +108,8 @@ if(argv[0] == 'create' && argv[1] && argv[2] && argv[3]) {
 } else {
 	console.log("Welcome to VirtualDesktop");
 	console.log("");
-	console.log("usage:");
-	console.log("\tcreate <aws_key_id> <aws_access_key> <stack_name>\tto create a virtualdesktop stack");
+	console.log("usage: (optional domain_name)");
+	console.log("\tcreate <aws_key_id> <aws_access_key> <stack_name> [<domain_name>]\tto create a virtualdesktop stack");
 	console.log("\tdelete <aws_key_id> <aws_access_key> <tmp_code_bucket_name> <stack_name>\tto delete a virtualdesktop stack");
 	console.log("");
 	console.log("where aws_key_id and aws_access_key are the aws credentials");
