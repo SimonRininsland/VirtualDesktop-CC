@@ -274,7 +274,68 @@ Permissions:
 
 
 \subsection{Serverless-Functions Lambda}
+Bei der Konfiguration von Lambda in Cloudformation müssen mehrere Ressourcen beachtet werden. \\
+Unsere Lambda Funktion benötigt eine Rolle, die sowohl Permissions wie Policies hält. Die Rolle braucht die Erlaubnis Lambda Funktionen aufzurufen, wenn etwas in unseren UserBucket hochgeladen wird. Dies wird folgendermaßen konfiguriert:
 
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+LambdaPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties: 
+        Action: "lambda:InvokeFunction"
+        FunctionName:
+            Fn::GetAtt:
+            - LambdaThumbnail
+            - Arn
+        Principal: "s3.amazonaws.com"
+\end{lstlisting}
+
+Außerdem wird eine Policy erstellt, um Logs und S3 Objekte zu schreiben und XRAYs verfolgen zu können.\\
+Die Lambda Funktion benutzt dann diese Rolle, um alle Dinge zu bewerkstelligen die wir für das erstellen der Thumbnails benötigen. Die Lambda Funktion wird folgendermaßen konfiguriert:
+
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+LambdaThumbnail:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+        Handler: "index.handler"
+        Role: 
+            Fn::GetAtt: 
+                - "LambdaRole"
+                - "Arn"
+        Code:
+            S3Bucket:
+                Ref: CodeBucket
+            S3Key: "lambda.zip"
+        MemorySize: "1024"
+        FunctionName: CreatePhotoThumbnail
+        Runtime: "nodejs8.10"
+        Timeout: "10"
+        TracingConfig:
+            Mode: "Active"
+\end{lstlisting}
+
+Wie man sieht gibt man in Zeile 3 den Einstiegspunkt mit, benutzt in den folgenden Zeilen die definierte Rolle und greift auf den gezippten Quellcode im definierten CodeBucket zu. Die restlichen Zeilen geben die Parameter für die Laufzeitumgebung an, wie die Arbeitsspeichergröße, den Funktionsname, die Laufzeit, Timeout und das erlaube XRAY Tracing. Auf das XRAY Tracing gehen wir später noch einmal ausführlicher ein.
+
+\subsection{Route53}
+Um die generierte ElasticBeanstalk Domain auf eine sprechender Domain zu mappen, in unserem Fall www.virtual-desktop.org, nutzen wir den Route53 Service. Die Konfiguration setzt eine registrierte Route53 Domain bei AWS voraus:
+
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+RouteDNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+        HostedZoneName: !Sub
+            - ${DName}.
+            - DName: !Ref DomainName
+        Name: !Sub
+            - www.${DName}.
+            - DName: !Ref DomainName
+        Type: CNAME
+        TTL: 900
+        ResourceRecords:
+        - !GetAtt EnvironmentElasticBS.EndpointURL
+\end{lstlisting}
+
+Der Domain Name wird per Startparameter von den Cloudformation Start-Script gesetzt. Per \textit{ResourceRecords} wird die ElasticBeanstalk Domain gesetzt.
+ 
 \section{Zusammenhang der Services}
 %- über NodeJS und Express(wegen Datentransformation JSON) ...
 %- Auth und Berechtigung prüfen- setzen von Rechten
@@ -434,8 +495,9 @@ bytes=x-y
 %https://github.com/lennym/busboy-body-parser/blob/master/index.js
 
 \section{Lambda - Thumbnailgenerator}
-- Was macht das\\
-- Wie geht das
+Im Rahmen der Darstellung unseres virtuellen Desktops brauchen wir Thumbnails um eine Vorschau der Bilder auf dem Desktop zu sehen. Für diese Funktion haben wir  uns entschlossen Lambda zu nutzen. Wir nutzen Lambda, um eine einzelne NodeJS-Funktion auszuführen. \\
+Die Funktion wird durch ein S3 \textit{s3:ObjectCreated:*} Event gestartet. Das Thumbnail Script filtert zuerst die Bilder aus den Anfragen, anhand der Dateiendungen heraus. Diese Bilder werden daraufhin verkleinert und in einen zweiten Bucket mit denselben Namen hochgeladen. Dieser zweite Bucket hat denselben Namen wie der Ursprungsbucket mit dem Präfix \textit{thumbs}. Damit kann man nun einfach aus dem NodeJS System auf das Thumbnail zugreifen. \\
+Ist das Thumbnail nicht vorhanden, wird ein generisches Vorschaubild erzeugt. 
 
 \chapter{Kosten - Aufwände}
 
