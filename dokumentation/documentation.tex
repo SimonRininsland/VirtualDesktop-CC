@@ -129,12 +129,46 @@ Nur dem \textit{Owner} ist es erlaubt den Desktop wieder auf privat zu setzen, a
  
 
 \chapter{Der Weg in die Cloud}
-MIT Sections
--was man alles brauch um einen webservice zu bauen: SERVER mit db und Webserver (Aufbau klassischer Webservice)
-- Skalierbarkeitswunsch: aufsplittung des SERVERS in Speicher, Rechenleistung, DB, Authentifizierung, ... UND DESHLAB GIBT ES ZB. NOSQL DATENBANKEN
-- outsourcing zu einem cloudservice/beschreibung kontrollverlust IaaS-PaaS-SaaS-FaaS (wieso man es in andere hände gibt/Kosten/..)
-- aufllistung von einigen cloudanbieter AWS, Azure, Google...
+Es gibt verschiedene Wege, wie man eine Web-Applikation aufsetzt. Die ersten Schritte wird man meist auf eine lokalen Entwicklungsumgebung machen, die man auch zum späteren entwickeln braucht. Irgendwann wird man sich aber die Frage stellen, wo die spätere Infrastruktur laufen wird. \\
+Der Weg in die Cloud braucht zu Beginn einen entscheidenden Schritt. Man muss sich für einen Cloudanbieter entscheiden. Es gibt verschiedenste Anbieter wie GoogleCloud von Google, AWS von Amazon oder Azure von Microsoft. \\
+Im Rahmen des Moduls CloudComputung an der HS-RM haben wir uns dazu entschlossen die Cloud Services von AWS - Amazon zu nutzen.
 
+\section{Anforderungen an die Cloud}
+Unsere Projektanforderungen umfasst einen klassischen Aufbaue eines Web Projektes. //
+Das Projekt hat folgende Anforderungen:
+\begin{itemize}
+\item Eine Laufumgebung auf der NodeJS läuft.
+\item Eine Datenbank, die auch mit vielen Zugriffen zurecht kommt. 
+\item Einen Speicher, der die Daten von den Nutzern speichert.
+\item Alle Zugriffe müssen authentifiziert werden.
+\item Skalierung soll möglich sein, um beliebig viele Nutzer bedienen zu können.
+\end{itemize}
+Es wäre durchaus denkbar fast alle Punkte sehr gut auf einer klassischen, nicht Cloudservice basierende Serverumgebung umzusetzen. Aber spätestens bei der beliebigen Skalierung stößt man auf Probleme. 
+\\
+Die auf einer klassischen Serverumgebung einfach mögliche vertikale Skalierung stößt schnell auf ihre Grenzen. Früher oder später wird die Datenbank in jedem System der Flaschenhals werden und diese dann horizontal zu skalieren ist meist mit großen strukturellen und/oder Architektur- Änderungen verbunden.
+
+\section{Vorteile Infrastruktur}
+Eine Umsetzung in AWS-Services bringt ein Umdenken mit sich. Jeder Teil des Services wird in eigenen Teil gesplittet. Rechner, Speicher, Datenbank, Authentifizierung, Domainverwaltung sogar einzelne Funktionen liegen einzeln in AWS vor. Dadurch ist eine beliebige Skalierung überhaupt möglich. \\
+Um das Projekt umzusetzen brauchen wir uns dank der Cloudservices nicht um dinge, wie den NodsJS Server, den Speicher, die Virtualisierung oder das Netzwerk kümmern. \\
+Auch um die Laufzeitumgebung und um das Betriebssystem brauchen wir uns nicht kümmern. Wir legen sie lediglich fest. Dank der Cloudservices von AWS können wir uns nach dem Aufsetzen und Verknüpfen aller unser genutzten Service ganz auf die Programmierung konzentrieren.
+
+\section{Vorteile Skalierung}
+Das Hauptproblem von Anwendungen, die erfolgreich von vielen Nutzern genutzt wird ist die Skalierung. Diese ist meist nur noch mit großen strukturellen Änderungen möglich.
+\subsection{Plattform / Laufzeitumgebung}
+Auf unserer Laufzeitumgebung läuft ein NodeJS Server. Dieser wird durch Elastic-Beanstalk automatisch skaliert. Die Rechenleistung also die CPU, der Arbeitsspeicher wie der interne genutzte Speicher wird dynamisch je nach Bedarf angepasst.
+\subsection{Speicher und Datenbank}
+Der Speicher wird bei AWS klassischerweise mit S3 umgesetzt. Der S3 Speicher hat eine Skalierung inkludiert. \\
+Es gibt verschiedenste Datenbanktypen, die meisten sind nur schwer skalierbar. AWS bietet die DynamoDB an um Dokumente mit Schlüsselwerten zu speichern. DynamoDB skaliert ebenfalls automatisch. Die globalen DynamoDB Tabellen replizieren sich automatisch über mehrere AWS-Regionen. [QUELLE: DYNAMODB] \\
+@TODO: "DB Zugriff?" Also das Problem mit dem Sachen einzeln holen.
+%QUELLE DYNAMODB
+%https://aws.amazon.com/de/dynamodb/
+\section{Vorteile Sicherheit}
+Sicherheit ist ein großes Thema bei Cloud Services. Anstatt sich händisch darum zu kümmern sein System gegenüber Fremdangriffen zu schützen, kann man bei AWS auf die Expertise von Profis zurückgreifen. Sicherheitspatches werden automatisch eingespielt, über Firewall und Antiviren Programme braucht man sich keine Sorgen mehr machen. \\
+Außerdem nimmt AWS mit verschiedenen Services Sicherheitsimplementierungen ab. Cognito ermöglicht schnell und einfach eine Double Opt in Registrierung umzusetzen.
+
+\section{Vorteile Kosten}
+Die Skalierung klassischer Webprojekte läuft so, dass die Infrastruktur für die maximale Nutzung aufgebaut wird. Das bedeutet, dass bei hoher kurzzeitiger Nutzung Ressourcen aufgebaut werden, die dann kurz danach nicht mehr benötigt werden. Ein Rückbau wird selten gemacht und Ressourcen liegen brach.\\
+Dieses überpowern der Infrastruktur birgt vermeidbare Mehrkosten. AWS rechnet immer nur den aktuellen Verbrauch ab. Wird ein Server Nachts nicht genutzt, werden keine Kosten generiert. Alle zusätzlichen Kosten einer klassischen Infrastruktur wie Wartung, sind darin bereits inkludiert. 
 
 \chapter{Architektur}
 %- Festlegung auf AWS
