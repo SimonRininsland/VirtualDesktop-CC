@@ -552,12 +552,86 @@ Wir haben während der Entwicklung sehr darauf gedachtet die Anwendung möglichs
 - Hochrechnung pro Monat und pro Nutzer (oder pro 100 Nutzer) \\
 - Grafik erstellen
 
-Zur Kalkulation der Betriebskosten haben wir folgende Parameter festgelegt:
+Zur Kalkulation der Betriebskosten betrachten wir die laufenden Monatskosten für die folgenden Szenarien:\\
 \begin{itemize}
-\item Die betrachtete Laufzeit ist ein Monat.
-\item 
+\item Es werden 10 Anfragen pro Minute gestellt und \textbf{438000} pro Monat.
+\item Es werden 1000 Anfragen pro Minute gestellt und \textbf{43800000} pro Monat.
+\item Es werden 1000000 Anfragen pro Minute gestellt und \textbf{43800000000} pro Monat.
 \end{itemize}
 
+Da die verschiedenen Funktionen unserer Anwendung verschiedene Kosten verursachen gehen wir davon aus, dass die Requests etwa gleich verteilt auf unsere verschiedenen Funktionen aufgegliedert sind wie Einloggen, Desktop wechseln, Bild hochladen, Datei hochladen usw. Dies würde bedeuten, dass die Hälfte der Requests \\
+Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. [QUELLE: AWSRECHNER] Für Lambda wurde folgender Rechner genutzt. [QUELLE: LAMBDARECHNER]
+\\
+Wir setzen folgende Variablen fest:
+\begin{lstlisting}
+MINUTE-REQUESTS: Minuetliche Requests
+MONTH-REQUESTS: Totale monatliche Requests
+\end{lstlisting} 
+Damit würden sich dann folgende Parameter ergeben, die jeweils für die verschiedenen Szenarien in den \textit{AWS Simply Monthly Calculator} einzutragen sind.
+\begin{enumerate}
+\item EC2 Instanz
+\begin{enumerate}
+\item Amazon EC2-Instances: 1/10 * MINUTE-REQUESTS
+\item Typ: Linux für m1.small
+\item EBS-Volumes: 1/10 * MINUTE-REQUESTS
+\item EBS-Volumes-Speicher: 2GB Speicher
+\item Ausgehende Datenübertragungen: 1/10 MINUTE-REQUESTS TB pro Monat
+\item Eingehende Datenübertragungen: 1/10 MINUTE-REQUESTS TB pro Monat
+\end{enumerate}
+\item S3 Requests
+\begin{enumerate}
+\item Standard Storage: 10 * \textit{MINUTE-REQUESTS} in GB
+\item PUT/COPY/POST/LIST Requests: 1/3 * \textit{MONTH-REQUESTS}
+\item GET- und andere Anfragen: 2/3 * \textit{MONTH-REQUESTS}
+\item Data Returned by S3 Select: 10 * \textit{MINUTE-REQUESTS}
+\end{enumerate}
+\item Lambda Requests
+\begin{enumerate}
+\item Executian a Month: 1/5 * MONTH-REQUESTS
+\item Memory Allocation in MB: 256
+\item Duration in MS: 2000
+\end{enumerate}
+\item DynamoDB
+\begin{enumerate}
+\item Größe Datenvolumen: 1 GB
+\item Elementgröße: 1 KB
+\item Total number of items read per second: 1/60 * MINUTE-REQUESTS
+\item Number of items written per second: 1/60 * MINUTE-REQUESTS
+\end{enumerate}
+\item Route53
+\begin{enumerate}
+\item Hostet Zones: 1
+\item Standardabfragen: MONTH-REQUESTS
+\end{enumerate}
+\end{enumerate}
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=1]{costs-10.png}
+\caption{Kosten für 10 Requests pro Minute}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=1]{costs-1000.png}
+\caption{Kosten für 1000 Requests pro Minute}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=1]{costs-1000000.png}
+\caption{Kosten für 1000000 Requests pro Minute}
+\end{figure}
+
+asd
+
+%10 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-D24F7D67-4399-487A-90EE-BFB707E5B259&r=FRA
+%1000 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-A2F36303-B150-4A4B-8BAD-3E8EAB946274&r=FRA
+%1000000 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-77814ED1-00F9-4058-8401-E0D1D464D215&r=FRA
+
+
+%QUELLE LAMBDARECHNER
+%https://dashbird.io/lambda-cost-calculator/
+%QUELLE AWSRECHNER
+%https://calculator.s3.amazonaws.com
 
 \clearpage
 \bibliographystyle{alpha}
