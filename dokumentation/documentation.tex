@@ -12,8 +12,10 @@
 \usepackage{lmodern}
 \usepackage{verbatim}
 \usepackage{graphicx}
+\usepackage[hyphens]{url}
 \usepackage[pdfborder={0 0 0}]{hyperref}
 \usepackage{listings}
+\renewcommand\_{\textunderscore\allowbreak}
 
 
 \usepackage{caption}
@@ -51,7 +53,7 @@
     \normalsize
     Abgabedatum: 30. Januar 2019\\
     \vspace{2.7cm}
-    \end{center}1
+    \end{center}
  \normalsize{
     \begin{tabular}{ll}
     	Gruppe: & \\
@@ -104,7 +106,7 @@ Zusätzlich haben wir eigene Projektanforderungen hinzugefügt:
 \item Deploybar von jedermann. Keine statischen Variablen. Der Stack soll mit einen Befehl aufgebaut werden.
 \item Strikte Trennung von Model, View und Controller. 
 \item Die NodeJS Funktionen sollen möglichst parallel laufen, um wartende Funktionen zu vermeiden.
-\item Die EC2 Instanz speichert keine Dateien, sondern "schleust" sie nur durch.
+\item Die EC2 Instanz speichert keine Dateien, sondern \dq schleust\dq\ sie nur durch.
 \end{enumerate}
 
 \section{VirtualDesktop}
@@ -167,12 +169,12 @@ Auf unserer Laufzeitumgebung läuft ein NodeJS Server. Dieser wird durch Elastic
 Eine klassische Umsetzung auf einen Server kann man lediglich vertikal skalieren und den Arbeitsspeicher oder den CPU aufrüsten. 
 \subsection{Skalierung Speicher und Datenbank}
 Der Speicher wird bei AWS klassischerweise mit S3 umgesetzt. Der S3 Speicher hat eine Skalierung inkludiert. \\
-Es gibt verschiedenste Datenbanktypen, die meisten sind nur schwer skalierbar. AWS bietet die DynamoDB an um Dokumente mit Schlüsselwerten zu speichern. DynamoDB skaliert ebenfalls automatisch. Die globalen DynamoDB Tabellen replizieren sich automatisch über mehrere AWS-Regionen. [QUELLE: DYNAMODB] \\
+Es gibt verschiedenste Datenbanktypen, die meisten sind nur schwer skalierbar. AWS bietet die DynamoDB an um Dokumente mit Schlüsselwerten zu speichern. DynamoDB skaliert ebenfalls automatisch. Die globalen DynamoDB Tabellen replizieren sich automatisch über mehrere AWS-Regionen \cite{AWSa}.\\
 @TODO: Das Problem mit dem Sachen einzeln holen. nochmal erwähnen. @Robin (ich kann das nicht)
 %QUELLE DYNAMODB
 %https://aws.amazon.com/de/dynamodb/
 \subsection{Skalierung Netzwerk}
-Auch um den Datendurchsatz bei der Netzwerkübertragung  braucht man sich dank verteilter Rechenzentren, die sich je nach Nutzungsort verändern können nicht zu kümmern. Plant man einen internationalen Einsatz ist ein Einsatz von Amazon CloudFront / CDN einfach erweiterbar. [QUELLE: CLOUDFRONT]%QUELLE CLOUDFRONT
+Auch um den Datendurchsatz bei der Netzwerkübertragung  braucht man sich dank verteilter Rechenzentren, die sich je nach Nutzungsort verändern können nicht zu kümmern. Plant man einen internationalen Einsatz ist ein Einsatz von Amazon CloudFront / CDN einfach erweiterbar \cite{AWSb}.%QUELLE CLOUDFRONT
 %https://aws.amazon.com/de/cloudfront/
 \section{Sicherheit}
 Sicherheit ist ein großes Thema bei Cloud Services. Anstatt sich händisch darum zu kümmern sein System gegenüber Fremdangriffen zu schützen, kann man bei AWS auf die Expertise von Profis zurückgreifen. Sicherheitspatches werden automatisch eingespielt, über Firewall und Antiviren Programme braucht man sich keine Sorgen mehr machen. \\
@@ -188,7 +190,7 @@ HIER DEN AUFBAU ERKLÄREN, DASS IN 3.2 DER ZSMHANG DER SERVICES ERKLÄRT WIRD
 - und irgendwo eine tolle Grafik wie die Windows und alles in der DynamoDb und verknüfung mit S3...
 Im folgendem wird die Architektur der Webanwendung VirtualDesktop unter Verwendung von Amazon Web Services als Architekturdiagramm dargestellt.
 \\
-\includegraphics[scale=0.25]{template1-designer.png} 
+%\includegraphics[scale=0.25]{template1-designer.png} 
 
 
 \section{Elastic Beanstalk Konfiguration}
@@ -200,7 +202,7 @@ Im folgendem wird die Architektur der Webanwendung VirtualDesktop unter Verwendu
 
 
 \subsection{Authentifizierungsservice Cognito}
-Zur Authentifizierung von Nutzern wird der AWS Cognito verwendet. Der Nutzerpool \textit{Cognitopool} vom Typ \textit{AWS::Cognito::UserPool} ist so konfiguriert, dass bei der Registrierung eines neuen Nutzers ein Passwort angegeben werden muss, welches die Minimalvorrausetzung eines AWS-Cognito-Passworts erfüllt (Zeichenlänge von Sechs[QUELLE: AWS COGNITO]). Für die Registriereung muss der Nutzer sich verifizieren. Dies geschieht hier über Email,in der der Nutzer seinen Bestätigungscode erhält. Die Formatierung dieser Email wird in \textit{EmailVerificationMessage} und \textit{EmailVerificationSubject} angegeben.  
+Zur Authentifizierung von Nutzern wird der AWS Cognito verwendet. Der Nutzerpool \textit{Cognitopool} vom Typ \textit{AWS::Cognito::UserPool} ist so konfiguriert, dass bei der Registrierung eines neuen Nutzers ein Passwort angegeben werden muss, welches die Minimalvorrausetzung eines AWS-Cognito-Passworts erfüllt (Zeichenlänge von Sechs \cite{AWSD}). Für die Registriereung muss der Nutzer sich verifizieren. Dies geschieht hier über Email, in der der Nutzer seinen Bestätigungscode erhält. Die Formatierung dieser Email wird in \textit{EmailVerificationMessage} und \textit{EmailVerificationSubject} angegeben.  
 %COGNITO MINLÄNGE
 %https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-passwordpolicy.html
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
@@ -222,7 +224,7 @@ CognitoPool:
 
 \end{lstlisting}
 \bigskip
-\noindent Um den \textit{UserPool} verwenden zu können, benötigt dieser einen Benutzer, den \textit{AWS::Cognito::UserPoolClient}. Dieser wird über die Property \textit{UserPoolId} an den angegeben \textit{UserPool} gebunden, in diesem Fall wird eine Referenz auf den zuvor angelegten UserPool mit dem Namen \textit{CognitoPool} angegeben. Die Property \textit{GenerateSecret} wird hier auf \textit{false} gesetzt, da die clientseitig verwendete Amazon Cognito Identity-SDK für JavaScript keine client secrets unterstützt [QUELLE: generateSec].
+\noindent Um den \textit{UserPool} verwenden zu können, benötigt dieser einen Benutzer, den \textit{AWS::Cognito::UserPoolClient}. Dieser wird über die Property \textit{UserPoolId} an den angegeben \textit{UserPool} gebunden, in diesem Fall wird eine Referenz auf den zuvor angelegten UserPool mit dem Namen \textit{CognitoPool} angegeben. Die Property \textit{GenerateSecret} wird hier auf \textit{false} gesetzt, da die clientseitig verwendete Amazon Cognito Identity-SDK für JavaScript keine client secrets unterstützt \cite{AWSAmplify}.
 %generateSec QUelle
 %https://github.com/aws-amplify/amplify-js/tree/master/packages/amazon-cognito-identity-js
 
@@ -243,8 +245,8 @@ Bucket:
 
 
 \subsection{Datenbank DynamoDB}
-Zur Erstellung einer Datenbanktabelle in der DynamoDB wird hier exemplarisch an der \textit{Permissions}-Tabelle vom Typ \textit{AWS::DynamoDB::Table} gezeigt. Anders als bei klassischen SQL-Datenbanken kann ein Eintrag in einer DynamoDB-Tabelle beliebige Felder beinhalten. Diese werden lediglich über den Schlüssel abgefragt. Um den Schlüssel einer Tabelle zu definieren muss der Attributtyp, der Attributname und der Keytyp innerhalb der AttributeDefinitions und KeySchema angegeben werden. Diese beiden Felder sind erforderlich, müssen also angegeben werden. Das selbe gilt für \textit{ProvisionedThroughput}[QUELLE allg.DYNDB ].
-Dies bedeutet, dass die Skalierung kann nicht bei der Erstellung durch CloudFormation oder EBS eingestellt werden. Um die DynamoDB zu skalieren muss \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} im AWS-Account aktiv sein. Falls \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} bereits bei der Erstellung durch EB-Deploy aktiviert war skalieren die Tabellen ansonsten nicht. Das Autoscaling für die Tabellen kann dann jedoch nachträglich über die Management-Console eingestellt werden. Nähere Informationen hierzu sind in [QUELLE: AUTOSCALING] zu finden.
+Das Erstellung einer Datenbanktabelle in der DynamoDB wird hier exemplarisch an der \textit{Permissions}-Tabelle vom Typ \textit{AWS::DynamoDB::Table} gezeigt. Anders als bei klassischen SQL-Datenbanken kann ein Eintrag in einer DynamoDB-Tabelle beliebige Felder beinhalten. Diese werden lediglich über den Schlüssel abgefragt. Um den Schlüssel einer Tabelle zu definieren muss der \textit{AttributeType}, der \textit{AttributeName} und der \textit{KeyType} innerhalb der \textit{AttributeDefinitions} und \textit{KeySchema} angegeben werden. Diese beiden Felder sind erforderlich, müssen also angegeben werden. Das selbe gilt für \textit{ProvisionedThroughput} \cite{AWSDa}.
+Dies bedeutet, dass die Skalierung nicht bei der Erstellung durch CloudFormation oder EBS eingestellt werden werden. Um die DynamoDB zu skalieren muss \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} im AWS-Account aktiv sein. Falls \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} bereits bei der Erstellung durch EB-Deploy aktiviert war skalieren die Tabellen,  ansonsten nicht. Das Autoscaling für die Tabellen kann dann jedoch nachträglich über die Management-Console eingestellt werden. Nähere Informationen hierzu sind in \cite{AWSDb} zu finden.
 
 %QUELLE allg.DYNDB
 %https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
@@ -370,10 +372,10 @@ Einleitung dazu: Weil zu viel gemacht - nur die interessante Teile näher erklä
 %- Wie haben wir es gelöst\\
 %-  z.B. www Cognito
 
-Bei Elastic-Beanstalk-Projekten wird bei jedem Deploy die gesamte Umgebung mit allen AWS-Resourcen neu gestartet. Dies beinhaltet unter anderem die EC2-Instanz. Da bei Quellcodeänderungen ein Deploy erneut ausgeführt werden muss und die Instanziierung einer EC2-Instanz zeitaufwendig sein kann ist dies für die Entwicklung der Webanwendung nicht praktikabel. Aus diesem Grund wurden in Elastic-Beanstalk Referenzen[QUELLE: REF AWS] für die dynamisch angelegten Ressourcen erzeugt. Diese Referenzen können in Umgebungsvariablen der EC2-Instanzen übernommen werden, dies geschieht in der \textit{node-env-keys.config} [QUELLE: ENVI VAR].\\
+Bei Elastic-Beanstalk-Projekten wird bei jedem Deploy die gesamte Umgebung mit allen AWS-Resourcen neu gestartet. Dies beinhaltet unter anderem die EC2-Instanz. Da bei Quellcodeänderungen ein Deploy erneut ausgeführt werden muss und die Instanziierung einer EC2-Instanz zeitaufwendig sein kann ist dies für die Entwicklung der Webanwendung nicht praktikabel. Aus diesem Grund wurden in Elastic-Beanstalk, Referenzen \cite{AWSDc} für die dynamisch angelegten Ressourcen erzeugt. Diese Referenzen können in Umgebungsvariablen der EC2-Instanzen übernommen werden, dies geschieht in der \textit{node-env-keys.config} \cite{AWSDd}.\\
 Um eine schnellere Entwicklung voranzutreiben wird dieser Umstand genutzt, indem statische (nicht durch EBS-Deploy generiert) Amazon Web Services erstellt und in die Umgebungsvariablen des Entwicklersystems hinzugefügt werden.
 Hierbei ist zu beachten, dass lediglich die EC2-Instanzen durch den lokalen Rechner ersetzt werden. Anzulegende Umgebungsvariablen sind
-AWS\_ACCESS\_KEY\_ID und AWS\_SECRET\_ACCESS\_KEY mit den AWS-Credials, COGNITO\_CLIENT und COGNITO\_POOL mit der App-Client-ID eines Cognito-Clients (mit GenerateSecret=false) und der Pool-ID des dazugehörigen Cognito-Pools, FILES, PERMISSIONS und WINDOWS mit den jeweiligen Tabellennamen von DynamoDB-Tabellen mit der Struktur beschrieben in [.\textbf{TODO}.] und BUCKET sowie THUMB\_BUCKET mit den Bucket-Namen. Weiterhin muss die Lambda-Funktion wie in \textbf{LAMDBA TODO} beschrieben  für die Generierung von Thumbnails erstellt werden. Die Lambda-Funktion muss mit den Buckets verknüpft sein.  
+\textit{AWS\_ACCESS\_KEY\_ID} und \textit{AWS\_SECRET\_ACCESS\_KEY} mit den AWS-Credentials, \textit{COGNITO\_CLIENT} und \textit{COGNITO\_POOL} mit der App-Client-ID eines Cognito-Clients (mit GenerateSecret=false) und der Pool-ID des dazugehörigen Cognito-Pools, \textit{FILES}, \textit{PERMISSIONS} und \textit{WINDOWS} mit den jeweiligen Tabellennamen von DynamoDB-Tabellen mit der Struktur beschrieben in [.\textbf{TODO}.] und \textit{BUCKET} sowie \textit{THUMB\_BUCKET} mit den Bucket-Namen. Weiterhin muss die Lambda-Funktion wie in \textbf{LAMDBA TODO} beschrieben  für die Generierung von Thumbnails erstellt werden. Die Lambda-Funktion muss mit den Buckets verknüpft sein.  
 
 
 %REF QUELLE
@@ -387,7 +389,7 @@ AWS\_ACCESS\_KEY\_ID und AWS\_SECRET\_ACCESS\_KEY mit den AWS-Credials, COGNITO\
 \section{DynamoDB}
 %- Was ist das Problem. Nicht mehrere Sachen löschen nicht möglich.
 Da die DynamoDB nicht über die Möglichkeit verfügt, mehrere Einträge über einen Key zu entfernen, muss für die \textit{deleteWindow}-Funktion die gesamte \textit{File}-Liste und \textit{Permission}-Liste für den gegebenen Key eingelesen und jeder Eintrag einzeln in der DynamoDB entfernt werden.
-Um nicht jeden Listeneintrag einzeln zu entfernen kann zwar \textit{batchWriteItem} verwendet werden, dieses ist jedoch max. auf 25 DeleteItem-Operationen limitiert und es können keine \textit{conditions} angegeben werden [QUELLE: DELTEEITEM]. Aus diesem Grund werden die Items, wie hier einleitend erwähnt, einzeln entfernt.
+Um nicht jeden Listeneintrag einzeln zu entfernen kann zwar \textit{batchWriteItem} verwendet werden, dieses ist jedoch max. auf 25 DeleteItem-Operationen limitiert und es können keine \textit{conditions} angegeben werden \cite{AWSJSSDKD}. Aus diesem Grund werden die Items, wie hier einleitend erwähnt, einzeln entfernt.
 
 %deleteITEM AWS
 %https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#deleteItem-property
@@ -426,7 +428,7 @@ async function dispatch(tasks, map, callback) {
 }
 \end{lstlisting}
 
-Es wird hier zum einen der Parameter \textit{tasks}, einem Array aus Arrays aus Funktionen, der Form \textit{(dis, done)}, sowie ein Objekt \textit{map}, welches innerhalb der \textit{tasks} über \textit{dis.map} zugreifbar ist, und einer \textit{callback}-Funktion, welche nach Beendigung aller \textit{tasks} ausgeführt und die Resultate und Fehler zurückliefert, übergeben. Der \textit{callback} ist notwendig, da die Funktion asynchron ist. Die \textit{dispatch}-Funktion sorgt dafür, dass die Funktionen der inneren \textit{task}-Arrays parallel durch die Kapslung in \textit{promisses} ausgeführt werden. Der Array selbst wird sequentiell ausgeführt, dies wird durch \textit{await} sichergestellt. Es ist zu dem möglich, während des \textit{dispatch}-Prozesses weitere \textit{tasks} hinzuzufügen (dies wird z.B. beim Löschen von Desktops verwendet). Ermöglicht wird dies, da jede \textit{(dis, done)}-Funktion auf das \textit{data}-Objekt und somit auf das Doppelarray aus Funktionen zugreifen kann. Dadurch ist es den Funktionen auch möglich, Ergebnisse in \textit{results} zu speichern, Fehler in \textit{errors} anzugeben und die weitere Ausführung paralleler Arbeitsschritte durch das setzen von \textit{propergate} auf false zu verhindern. Das \textit{dis} der \textit{(dis, done)}-Funktion wird hierbei auf \textit{data} gebinded, das \textit{done} ist hier eine \textit{callback}-Funktion, welche das \textit{resolve} von \textit{Promise} ausführt. Die Funktion \textit{dispatch} kann wie am folgendem Beispiel der \textit{deleteWindow}-Funktion gezeigt verwendet werden:
+Es wird hier zum einen der Parameter \textit{tasks}, einem Array aus Arrays aus Funktionen, der Form \textit{(dis, done)}, sowie ein Objekt \textit{map}, welches innerhalb der \textit{tasks} über \textit{dis.map} zugreifbar ist, und einer \textit{callback}-Funktion, welche nach Beendigung aller \textit{tasks} ausgeführt und die Resultate und Fehler zurückliefert, übergeben. Der \textit{callback} ist notwendig, da die Funktion asynchron ist. Die \textit{dispatch}-Funktion sorgt dafür, dass die Funktionen der inneren \textit{task}-Arrays parallel durch die Kapselung in \textit{promisses} ausgeführt werden. Der Array selbst wird sequentiell ausgeführt, dies wird durch \textit{await} sichergestellt. Es ist zu dem möglich, während des \textit{dispatch}-Prozesses weitere \textit{tasks} hinzuzufügen (dies wird z.B. beim Löschen von Desktops verwendet). Ermöglicht wird dies, da jede \textit{(dis, done)}-Funktion auf das \textit{data}-Objekt und somit auf das Doppelarray aus Funktionen zugreifen kann. Dadurch ist es den Funktionen auch möglich, Ergebnisse in \textit{results} zu speichern, Fehler in \textit{errors} anzugeben und die weitere Ausführung paralleler Arbeitsschritte durch das setzen von \textit{propergate} auf false zu verhindern. Das \textit{dis} der \textit{(dis, done)}-Funktion wird hierbei auf \textit{data} gebinded, das \textit{done} ist hier eine \textit{callback}-Funktion, welche das \textit{resolve} von \textit{Promise} ausführt. Die Funktion \textit{dispatch} kann wie am folgendem Beispiel der \textit{deleteWindow}-Funktion gezeigt verwendet werden:
 
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java]
 
@@ -454,7 +456,7 @@ function deleteWindow(username, windowName, callback) {
 %- kann easy erweitertert werden\\
 %- Wie haben wir es gelöst
 
-Um parallele Entwicklung des Projektes gewährleisten zu können wird ein Model-View-Controller verwendet. Das Model beinhaltet hierbei die Amazon Web Services S3, DynamoDB, Cognito welche durch die \textit{virtual-desktop.js} in Schnittstellen abstrahiert wird und mittels NodeJS-Express-Server für den Controller zugänglich ist. Diese Abstraktion wurde vorgenommen, damit der NodeJS-Express-Server durch AWS-Lambda substituiert werden kann. Der NodeJS-Express-Server wird durch den Elastic-Beanstalk bereitgestellt. AWS-Lambda wird im Backend verwendet um für neue Dateien, welche durch den Nutzer in den S3-Bucket gespeichert werden Thumbnails zu erstellen.\\
+Um die parallele Entwicklung des Projektes gewährleisten zu können wird ein Model-View-Controller verwendet. Das Model beinhaltet hierbei die Amazon Web Services S3, DynamoDB, Cognito welche durch die \textit{virtual-desktop.js} in Schnittstellen abstrahiert wird und mittels NodeJS-Express-Server für den Controller zugänglich ist. Diese Abstraktion wurde vorgenommen, damit der NodeJS-Express-Server durch AWS-Lambda substituiert werden kann. Der NodeJS-Express-Server wird durch den Elastic-Beanstalk bereitgestellt. AWS-Lambda wird im Backend verwendet um für neue Dateien, welche durch den Nutzer in den S3-Bucket gespeichert werden Thumbnails zu erstellen.\\
 Die Schnittstelle \textit{api.js} im Frontend wird durch den Controller erweitert. Dieser Controller reagiert auf die Eingaben des Nutzers im Frontend, indem Controller-Funktionen angesprochen werden. Bei Bedarf werden Backend-Funktionen durch den Controller angesprochen und/oder im Frontend Events ausgelöst, wodurch dieses aktualisiert werden kann.
 Die Verwendung eines Controllers ist vorteilhaft um die spätere Einbindung von Push-Notifications mit geringem Aufwand zu realisieren.
 
@@ -465,7 +467,7 @@ Die Verwendung eines Controllers ist vorteilhaft um die spätere Einbindung von 
 %- Erklären wieso wieso wir das bauen.\\
 %- Erklären was wir gebaut haben und wie.
 
-Um Dateien von und in den S3-Bucket zu laden, können Buffer verwendet werden, dies bedeutet das die Dateien zunächst im Arbeitsspeicher oder im Speicher des NodeJS-Express-Server zwischengespeichert werden müssen. Da eine EC2-Instanz nur über ein begrenztes Volumen an Speicher verfügt, ist das Buffern von Dateien nicht empfehlenswert (erhöhte Kosten, Skalierung von EC2-Instanzen) [QUELLE: EC2 AWS].\\
+Um Dateien von und in den S3-Bucket zu laden, können Buffer verwendet werden, dies bedeutet das die Dateien zunächst im Arbeitsspeicher oder im Speicher des NodeJS-Express-Server zwischengespeichert werden müssen. Da eine EC2-Instanz nur über ein begrenztes Volumen an Speicher verfügt, ist das Buffern von Dateien nicht empfehlenswert (erhöhte Kosten, Skalierung von EC2-Instanzen) \cite{AWS}.\\
 %https://aws.amazon.com/de/ec2/pricing/on-demand/
 Aus diesem Grund werden die Dateien in diesem Projekt vom Backend gestreamt. Hierzu wurden die folgenden Express-Middleware-Bibliotheken geprüft:
 
@@ -482,23 +484,21 @@ Aus diesem Grund werden die Dateien in diesem Projekt vom Backend gestreamt. Hie
 \noindent Die Middleware \textit{multer} und \textit{express-fileupload} kommen für das gestreamte Hochladen von Dateien auf den S3-Bucket nicht in Frage, da sie keine Streams unterstützen sondern entweder auf der Festplatte speichern  oder im Arbeitsspeicher buffern [quelle: multer, fileupload].
 %multer: https://www.npmjs.com/package/multer
 %fileupload: https://www.npmjs.com/package/express-fileupload
-Um \textit{busboy} im Kontext von NodeJS-Express verwenden zu können, kann \textit{express-busboy} verwendet werden. Allerdings ist diese Bibliothek ebenfalls nur im Stande auf die Festplatte zu speichern. Auch der \textit{busboy-body-parser} stellte sich bei näherer Betrachtung des Quellcode als ungeeignet heraus, da auch dieser nur im Arbeitsspeicher buffert [QUELLE: busboy-body-parser].\\
-Die Bibliothek \textit{busboy} hingegen liest den HTTP-Request als Stream ein und bietet auch die Dateien als Stream an [QUELLE BUSBOY].
+Um \textit{busboy} im Kontext von NodeJS-Express verwenden zu können, kann \textit{express-busboy} verwendet werden. Allerdings ist diese Bibliothek ebenfalls nur im Stande auf die Festplatte zu speichern. Auch der \textit{busboy-body-parser} stellte sich bei näherer Betrachtung des Quellcode als ungeeignet heraus, da auch dieser nur im Arbeitsspeicher buffert \cite{LeonardMartin}.\\
+%https://github.com/lennym/busboy-body-parser/blob/master/index.js
+Die Bibliothek \textit{busboy} hingegen liest den HTTP-Request als Stream ein und bietet auch die Dateien als Stream an \cite{busboy}.
 %https://www.npmjs.com/package/busboy
-Die Problematik, die sich hieraus ergibt, ist das für das Speichern der Datei der Desktop auf dem die Datei gespeichert werden soll bekannt sein muss. Da \textit{busboy} allerdings auf dem HTTP-Request-Stream arbeitet muss der Desktopname vor der Datei im \textit{multipart/form-data} stehen. Um \textit{busboy} zu verwenden wurde daher eine minimalistische Middleware \textit{busboySync.js} entwickelt [QUELLE MIDDLEWARE].
+Die Problematik, die sich hieraus ergibt, ist das für das Speichern der Datei der Desktop auf dem die Datei gespeichert werden soll bekannt sein muss. Da \textit{busboy} allerdings auf dem HTTP-Request-Stream arbeitet muss der Desktopname vor der Datei im \textit{multipart/form-data} stehen. Um \textit{busboy} zu verwenden wurde daher eine minimalistische Middleware \textit{busboySync.js} entwickelt \cite{Express}.
 %https://expressjs.com/en/guide/using-middleware.html
 Diese Middleware kommt in allen Resourcen als Router-Middleware des NodeJS-Express-Servers zum Einsatz, welche \textit{multipart/form-data} verarbeitet. Ausnahme hierbei bildet die \textit{/addFile}-Resource, welche aus oben genannten Gründen \textit{busboy} nativ verwendet.\\
 Für den Download von Dateien wird die \textit{/getStream}-Resource verwendet, diese liefert für typische Range-Requests der Form
 \begin{lstlisting}
 bytes=x-y
 \end{lstlisting}
-, wobei x das Start-byte und y das End-byte darstellt (y kann auch entfallen), ein HTTP-Response-206 (Partial Content) zurück [QUELLE: Range,206 7233].
+, wobei x das Start-byte und y das End-byte darstellt (y kann auch entfallen), ein HTTP-Response-206 (Partial Content) zurück \cite{HTP}.
+
+%QUELLE: Range,206 723
 %https://www.rfc-editor.org/rfc/rfc7233.txt 
-
-
-
-%busboy-body-parser
-%https://github.com/lennym/busboy-body-parser/blob/master/index.js
 
 \section{Lambda - Thumbnailgenerator}
 Im Rahmen der Darstellung unseres virtuellen Desktops brauchen wir Thumbnails um eine Vorschau der Bilder auf dem Desktop zu sehen. Für diese Funktion haben wir  uns entschlossen Lambda zu nutzen. Wir nutzen Lambda, um eine einzelne NodeJS-Funktion auszuführen. \\
@@ -511,7 +511,7 @@ The provided execution role does not have permissions to
 call PutTraceSegments on XRAY
 \end{lstlisting}
 wird die Erstellung abgebrochen. Wird eine Lambda Funktion durch ein Service wie Cloudformation getriggert, braucht Lambda keine weiteren Berechtigungen, da Lambda diese in den Stack-Kontext bereits besitzt. Unser Lambda Service wird aber durch ein Event getriggert. Wenn ein User etwas in den Userbucket lädt, wird die Lambda Funktion ausgeführt. Dadurch fehlt der Funktion der Stack Kontext, auch wenn er durch jenen erstellt wurde. \\
-Seit Anfang 2018 [QUELLE: XRAY] ist es möglich durch hinzufügen von
+Seit Anfang 2018 \cite{AWSDe} ist es möglich durch hinzufügen von
 \begin{lstlisting}
 Properties:
   TracingConfig:
@@ -560,6 +560,7 @@ Zur Kalkulation der Betriebskosten haben wir folgende Parameter festgelegt:
 
 
 \clearpage
+\bibliographystyle{alpha}
 \bibliography{documentation}
 %\bibliographystyle{apalike}
 
