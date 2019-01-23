@@ -186,22 +186,27 @@ Dieses überpowern der Infrastruktur birgt vermeidbare Mehrkosten. AWS rechnet i
 %- Festlegung auf AWS
 %- architeturdiagramm
 %- Struktur DB und Struktur Anwendungskommunikation- Zusammenhang
-HIER DEN AUFBAU ERKLÄREN, DASS IN 3.2 DER ZSMHANG DER SERVICES ERKLÄRT WIRD
-- und irgendwo eine tolle Grafik wie die Windows und alles in der DynamoDb und verknüfung mit S3...
-Im folgendem wird die Architektur der Webanwendung VirtualDesktop unter Verwendung von Amazon Web Services als Architekturdiagramm dargestellt.
-\\
-%\includegraphics[scale=0.25]{template1-designer.png} 
+%HIER DEN AUFBAU ERKLÄREN, DASS IN 3.2 DER ZSMHANG DER SERVICES ERKLÄRT WIRD
+%- und irgendwo eine tolle Grafik wie die Windows und alles in der DynamoDb und verknüfung mit S3...
+%Im folgendem wird die Architektur der Webanwendung VirtualDesktop unter Verwendung von Amazon Web Services als Architekturdiagramm dargestellt.
 
+Die Architektur unserer Anwendung, lässt sich in folgender Grafik zusammenfassen
+
+\includegraphics[scale=0.24]{template1-designer.png} 
+Architektur Virtual-Desktop
+
+Wir brauchen eine Reihe von AWS Dienste, um unsere Applikation zu erstellen. 
 
 \section{Elastic Beanstalk Konfiguration}
 %-config file
 %-  Inkl aller Subservices die EBS anlegt.(LoadBalancer, Security Groups, S3 Bucket für EB Code, Cloudwatch)
 %- was es alles mit drin hat aber nebenbei erwähnen immer wieso und
-- [WOFÜR IST DIE DATEI GUT? EINLEITEND ERKLÄREN]
+%- [WOFÜR IST DIE DATEI GUT? EINLEITEND ERKLÄREN]
+Die zentrale Rechen- und 
+Operationseinheit ist unsere EC2 Instanz im ElasticBeanstalk Stack. Dieser Stack sorgt dafür, dass die EC2 Instanz im Speicher, in der Rechenleistung, im Netzwerk wie auch im Arbeitsspeicher je nach derzeitiger Anforderung skaliert. Wie man sehen kann, braucht eine Elastic-Beanstalk Instanz auch immer ein Elastic-Beanstalk Environment. Dort werden zum Beispiel die Laufzeit und die Umgebungsvariablen über die Elastic-Beanstalk Konfiguration festgelegt.
 
 
-
-\subsection{Authentifizierungsservice Cognito}
+\section{Authentifizierungsservice Cognito}
 Zur Authentifizierung von Nutzern wird der AWS Cognito verwendet. Der Nutzerpool \textit{Cognitopool} vom Typ \textit{AWS::Cognito::UserPool} ist so konfiguriert, dass bei der Registrierung eines neuen Nutzers ein Passwort angegeben werden muss, welches die Minimalvorrausetzung eines AWS-Cognito-Passworts erfüllt (Zeichenlänge von Sechs \cite{AWSD}). Für die Registriereung muss der Nutzer sich verifizieren. Dies geschieht hier über Email, in der der Nutzer seinen Bestätigungscode erhält. Die Formatierung dieser Email wird in \textit{EmailVerificationMessage} und \textit{EmailVerificationSubject} angegeben.  
 %COGNITO MINLÄNGE
 %https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-passwordpolicy.html
@@ -236,7 +241,7 @@ CognitoPool:
             UserPoolId: '{"Ref" : "CognitoPool"}'
 \end{lstlisting} 
 
-\subsection{Cloud-Speicher S3}
+\section{Cloud-Speicher S3}
 Durch folgende Beschreibung in der Konfiguration wird ein Cloud-Speicher des Typs \textit{AWS::S3::Bucket} angelegt.
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
 Bucket:
@@ -244,7 +249,7 @@ Bucket:
 \end{lstlisting}          
 
 
-\subsection{Datenbank DynamoDB}
+\section{Datenbank DynamoDB}
 Das Erstellung einer Datenbanktabelle in der DynamoDB wird hier exemplarisch an der \textit{Permissions}-Tabelle vom Typ \textit{AWS::DynamoDB::Table} gezeigt. Anders als bei klassischen SQL-Datenbanken kann ein Eintrag in einer DynamoDB-Tabelle beliebige Felder beinhalten. Diese werden lediglich über den Schlüssel abgefragt. Um den Schlüssel einer Tabelle zu definieren muss der \textit{AttributeType}, der \textit{AttributeName} und der \textit{KeyType} innerhalb der \textit{AttributeDefinitions} und \textit{KeySchema} angegeben werden. Diese beiden Felder sind erforderlich, müssen also angegeben werden. Das selbe gilt für \textit{ProvisionedThroughput} \cite{AWSDa}.
 Dies bedeutet, dass die Skalierung nicht bei der Erstellung durch CloudFormation oder EBS eingestellt werden werden. Um die DynamoDB zu skalieren muss \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} im AWS-Account aktiv sein. Falls \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} bereits bei der Erstellung durch EB-Deploy aktiviert war skalieren die Tabellen,  ansonsten nicht. Das Autoscaling für die Tabellen kann dann jedoch nachträglich über die Management-Console eingestellt werden. Nähere Informationen hierzu sind in \cite{AWSDb} zu finden.
 
@@ -281,7 +286,7 @@ Permissions:
 
 
 
-\subsection{Serverless-Functions Lambda}
+\section{Serverless-Functions Lambda}
 Bei der Konfiguration von Lambda in Cloudformation müssen mehrere Ressourcen beachtet werden. \\
 Unsere Lambda Funktion benötigt eine Rolle, die sowohl Permissions wie Policies hält. Die Rolle braucht die Erlaubnis Lambda Funktionen aufzurufen, wenn etwas in unseren UserBucket hochgeladen wird. Dies wird folgendermaßen konfiguriert:
 
@@ -323,7 +328,7 @@ LambdaThumbnail:
 
 Wie man sieht gibt man in Zeile 3 den Einstiegspunkt mit, benutzt in den folgenden Zeilen die definierte Rolle und greift auf den gezippten Quellcode im definierten CodeBucket zu. Die restlichen Zeilen geben die Parameter für die Laufzeitumgebung an, wie die Arbeitsspeichergröße, den Funktionsname, die Laufzeit, Timeout und das erlaube XRAY Tracing. Auf das XRAY Tracing gehen wir später noch einmal ausführlicher ein.
 
-\subsection{Route53}
+\section{Route53}
 Um die generierte ElasticBeanstalk Domain auf eine sprechender Domain zu mappen, in unserem Fall www.virtual-desktop.org, nutzen wir den Route53 Service. Die Konfiguration setzt eine registrierte Route53 Domain bei AWS voraus:
 
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
@@ -632,21 +637,23 @@ Mit diesen Parametern lassen sich folgende Kosten berechnen:
 	\item 1000 Anfragen pro Minute: 11.498,94 US-Dollar / 10129,30 Euro (Stand 23.01.2019) pro Monat
 	\item 1000000 Anfragen pro Minute: 237.918.977,63 US-Dollar / 209580448,20 Euro (Stand 23.01.2019) pro Monat 
 \end{enumerate}
-\begin{figure}[h]
-\centering
-\includegraphics[scale=1]{costs-10.png}
-\caption{Kosten für 10 Requests pro Minute}
-\end{figure}
-\begin{figure}[h]
-\centering
-\includegraphics[scale=1]{costs-1000.png}
-\caption{Kosten für 1000 Requests pro Minute}
-\end{figure}
-\begin{figure}[h]
-\centering
-\includegraphics[scale=1]{costs-1000000.png}
-\caption{Kosten für 1000000 Requests pro Minute}
-\end{figure}
+
+%@TODO: Grafiken raussuchen zu Kosten
+%\begin{figure}[h]
+%\centering
+%\includegraphics[scale=1]{costs-10.png}
+%\caption{Kosten für 10 Requests pro Minute}
+%\end{figure}
+%\begin{figure}[h]
+%\centering
+%\includegraphics[scale=1]{costs-1000.png}
+%\caption{Kosten für 1000 Requests pro Minute}
+%\end{figure}
+%\begin{figure}[h]
+%\centering
+%\includegraphics[scale=1]{costs-1000000.png}
+%\caption{Kosten für 1000000 Requests pro Minute}
+%\end{figure}
 
 \subsection{Bewertung}
 Wie man erkennen kann, ist aus Kostengründen bei einer sehr großen Filesharing Plattform (> 10.000 Aufrufe pro Minute) von unserer Umsetzung abzuraten. Die Kosten für den S3 Service wären untragbar. Denkbar wäre hier, wie später im Ausblick erwähnt, eine Umsetzung in \emph{Amazon Glacier.}\\
