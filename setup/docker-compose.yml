@@ -1,0 +1,12 @@
+version: "2"
+services:
+  node:
+    build: .
+    user: "root"
+    working_dir: /home/node/app/VirtualDesktop-CC/src/express
+    environment:
+      - NODE_ENV=production
+    env_file: .env
+    ports:
+      - 3000:3000
+    command: "npm start"

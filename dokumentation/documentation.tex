@@ -349,7 +349,7 @@ RouteDNS:
 
 Der Domain Name wird per Startparameter von den Cloudformation Start-Script gesetzt. Per \textit{ResourceRecords} wird die ElasticBeanstalk Domain gesetzt.
  
-\section{Zusammenhang der Services}
+\section{Wie arbeiten die Services zusammen}
 %- über NodeJS und Express(wegen Datentransformation JSON) ...
 %- Auth und Berechtigung prüfen- setzen von Rechten
 %- wie sehen die Tabellen aus
@@ -357,13 +357,17 @@ Der Domain Name wird per Startparameter von den Cloudformation Start-Script gese
 %- kurz jede api-Funktion anreißen
 %
 
+Um das zusammenarbeiten der einzelnen Services zu demonstrieren, zeigen wir beispielhaft verschiedene Szenarien. Wir gehen in den einzelnen Szenarien unterschiedlich detailliert, auf die genutzten Dienste ein, um den Fokus nach unseren Wünschen zu setzen:
+\begin{itemize}
+\item Ein Nutzer logt sich mit einen Username und Passwort ein.
+\item Ein Nutzer lädt ein Bild hoch.
+\end{itemize}
 
-
-
-
-
-
-
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.35]{login-flow.png} 
+\caption{User logt sich ein}
+\end{figure}
 
 
 
