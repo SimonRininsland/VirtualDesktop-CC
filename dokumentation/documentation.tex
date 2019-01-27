@@ -125,8 +125,6 @@ Es gibt also
 \item[] \textbf{User}, die Rechte für einen oder mehrere Desktops zugewiesen bekommen haben und zwischen diesen wechseln können und diesen Rechten entsprechend Aktionen ausführen dürfen.
 \end{itemize} 
 
-@TODO: Irgendwo muss noch sowas wie "Wie deploye ich" hinein. Also der eine Befehl den man brauch zum erstellen des Stacks.
-
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.45]{VD_konzept.pdf}
@@ -141,20 +139,20 @@ Nur dem \textit{Owner} ist es erlaubt den Desktop wieder auf privat zu setzen, a
 
 \chapter{Der Weg in die Cloud}
 Es gibt verschiedene Wege, wie man eine Web-Applikation aufsetzt. Die ersten Schritte wird man meist auf eine lokalen Entwicklungsumgebung machen, die man auch zum späteren entwickeln braucht. Irgendwann wird man sich aber die Frage stellen, wo die spätere Infrastruktur laufen wird. \\
-Der Weg in die Cloud braucht zu Beginn einen entscheidenden Schritt. Man muss sich für einen Cloudanbieter entscheiden. Es gibt verschiedenste Anbieter wie GoogleCloud von Google, AWS von Amazon oder Azure von Microsoft. \\
+Der Weg in die Cloud benötigt zu Beginn einen entscheidenden Schritt. Man muss sich für einen Cloudanbieter entscheiden. Es gibt verschiedenste Anbieter wie GoogleCloud von Google, AWS von Amazon oder Azure von Microsoft. \\
 Im Rahmen des Moduls CloudComputung an der HS-RM haben wir uns dazu entschlossen die Cloud Services von AWS - Amazon zu nutzen.
 
 \section{Anforderungen an die Cloud}
-Unsere Projektanforderungen an die Architektur umfasst einen klassischen Aufbau eines Web Projektes. \\
-Das Projekt hat folgende Anforderungen:
+Unsere Projektanforderungen an die Architektur umfasst einen klassischen Aufbau eines Web Projektes mit folgenden Anforderungen. \\
+
 \begin{itemize}
 \item Eine Laufumgebung auf der NodeJS läuft.
-\item Eine Datenbank, die auch mit vielen Zugriffen zurecht kommt. 
+\item Eine Datenbank, die auch mit vielen Zugriffen schnell bleibt.
 \item Einen Speicher, der die Daten von den Nutzern speichert.
 \item Alle Zugriffe müssen authentifiziert werden.
-\item Skalierung soll möglich sein, um beliebig viele Nutzer bedienen zu können.
+\item Skalierung soll jederzeit möglich sein, um beliebig viele Nutzer bedienen zu können.
 \end{itemize}
-Es wäre durchaus denkbar fast alle Punkte sehr gut auf einer klassischen, nicht Cloudservice basierende Serverumgebung umzusetzen. Aber spätestens bei der beliebigen Skalierung stößt man auf Probleme. 
+Es wäre durchaus denkbar fast alle Punkte gut auf einer klassischen, nicht Cloudservice basierenden Serverumgebung umzusetzen. Aber spätestens bei der beliebigen Skalierung stößt man auf Probleme. 
 \\
 Die auf einer klassischen Serverumgebung einfach mögliche vertikale Skalierung stößt schnell auf ihre Grenzen. Früher oder später wird vermutlich die Datenbank in jedem System der Flaschenhals werden und diese dann horizontal zu skalieren ist meist mit großen strukturellen und/oder architektonischen Änderungen verbunden.
 
@@ -183,30 +181,79 @@ Außerdem nimmt AWS mit verschiedenen Services Sicherheitsimplementierungen ab. 
 Die Skalierung klassischer Webprojekte läuft so, dass die Infrastruktur für die maximale Nutzung aufgebaut wird. Das bedeutet, dass bei hoher kurzzeitiger Nutzung Ressourcen aufgebaut werden, die dann kurz danach nicht mehr benötigt werden. Ein Rückbau wird selten gemacht und Ressourcen liegen brach.\\
 Dieses überpowern der Infrastruktur birgt vermeidbare Mehrkosten. AWS rechnet immer nur den aktuellen Verbrauch ab. Wird ein Server Nachts nicht genutzt, werden keine Kosten generiert. Alle zusätzlichen Kosten einer klassischen Infrastruktur wie Wartung, sind darin bereits inkludiert. 
 \chapter{Architektur}
-%- Festlegung auf AWS
-%- architeturdiagramm
-%- Struktur DB und Struktur Anwendungskommunikation- Zusammenhang
-%HIER DEN AUFBAU ERKLÄREN, DASS IN 3.2 DER ZSMHANG DER SERVICES ERKLÄRT WIRD
-%- und irgendwo eine tolle Grafik wie die Windows und alles in der DynamoDb und verknüfung mit S3...
-%Im folgendem wird die Architektur der Webanwendung VirtualDesktop unter Verwendung von Amazon Web Services als Architekturdiagramm dargestellt.
+% Clouformation ansprechen
+%- Hier wie deploye ich rein
+Um in AWS seinen Service Stack zu persistieren haben wir \textit{Clouformation} genutzt. In \textit{Cloudformation} wird anhand einer template Datei der Stack in yml oder json beschrieben. \\
+Wie bereits in den Anforderungen beschrieben, haben wir uns als Ziel gesetzt den gesamten Service Stack mit einen Befehl ausrollen zu können. Der Befehl mit den Parametern ist folgender:
 
-Die Architektur unserer Anwendung, lässt sich in folgender Grafik zusammenfassen
+\begin{lstlisting}[xleftmargin=\parindent,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+node index.js create <aws_key_id> <aws_access_key> 
+<stack_name> [<domainName>]
+\end{lstlisting}
 
+Die Voraussetzung, um unser Stack Deployment Script ausführen zu können ist die Installation von node, aws-sdk, archiver und fs. \\
+Mit der Ausführung des Scripts werden die Templates für den Stack und die Lambda Anwendung inklusive der benötigten Dateien in einen \textit{CodeBucket} gestreamt, womit in \textit{Cloudformation} dann die Anwendungen aufgebaut werden. Ein Abbau des Stacks ist ebenso möglich und wird nach dem ausführen des deployment Scripts ausgegeben. \\
+
+Die daraus entstehende Servicearchtitektur kann man in folgender Grafik zusammenfassen.
+
+\begin{figure}[h!]
+\centering
 \includegraphics[scale=0.24]{template1-designer.png} 
-Architektur Virtual-Desktop
+\caption{Architektur Virtual-Desktop}
+\end{figure}
 
-Wir brauchen eine Reihe von AWS Dienste, um unsere Applikation zu erstellen. 
+Im folgenden Kapitel werden die einzelnen Services und deren Konfiguration in \textit{Cloudformation} beschrieben. 
 
 \section{Elastic Beanstalk Konfiguration}
-%-config file
-%-  Inkl aller Subservices die EBS anlegt.(LoadBalancer, Security Groups, S3 Bucket für EB Code, Cloudwatch)
-%- was es alles mit drin hat aber nebenbei erwähnen immer wieso und
-%- [WOFÜR IST DIE DATEI GUT? EINLEITEND ERKLÄREN]
 Die zentrale Rechen- und 
-Operationseinheit ist unsere EC2 Instanz im ElasticBeanstalk Stack. Dieser Stack sorgt dafür, dass die EC2 Instanz im Speicher, in der Rechenleistung, im Netzwerk wie auch im Arbeitsspeicher je nach derzeitiger Anforderung skaliert. Wie man sehen kann, braucht eine Elastic-Beanstalk Instanz auch immer ein Elastic-Beanstalk Environment. Dort werden zum Beispiel die Laufzeit und die Umgebungsvariablen über die Elastic-Beanstalk Konfiguration festgelegt.
+Operationseinheit ist unsere EC2 Instanz im ElasticBeanstalk Stack. Dieser Stack sorgt dafür, dass die EC2 Instanz im Speicher, in der Rechenleistung, im Netzwerk wie auch im Arbeitsspeicher je nach den derzeitiger Anforderung skaliert. Wie man in der Grafik sehen kann, braucht eine Elastic-Beanstalk Applikation auch immer ein Elastic-Beanstalk Umgebung und ein Konfigurationstemplate. In Auszügen zeige ich die ElasticBeanstalk Konfiguration.
 
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+ElasticBS:
+        Type: AWS::ElasticBeanstalk::Application
+        Properties:
+            Description: ElasticBeanstalk VirtualDesktop
+    ApplicationVersionElasticBS:
+        Type: AWS::ElasticBeanstalk::ApplicationVersion
+        Properties:
+            ApplicationName:
+                Ref: ElasticBS
+            Description: ElasticBeanstalk VirtualDesktop Application Version
+            SourceBundle:
+                S3Bucket:
+                    Ref: CodeBucket
+                S3Key: ebs.zip
+\end{lstlisting}
+Interessant ist hier die ElasticBeanstalk Appplikation zugrunde liegende Code, der in einen seperaten CodeBucket als zip vorliegt. Von dort aus wird die Applikation in der EC2 Instanz gebaut.
+Die ElasticBeanstalk Umgebung \textit{AWS::ElasticBeanstalk::Environment} beinhaltet die Konfiguration der eigentlichen Instanz.
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+    EnvironmentElasticBS:
+        Type: AWS::ElasticBeanstalk::Environment
+        Properties:
+            ApplicationName:
+                Ref: ElasticBS
+            Description: AWS ElasticBeanstalk VirtualDesktop Environment
+            TemplateName:
+                Ref: ConfigurationElasticBS
+            VersionLabel:
+                Ref: ApplicationVersionElasticBS
+            OptionSettings:
+            -
+                Namespace: aws:autoscaling:launchconfiguration 
+                OptionName: IamInstanceProfile
+                Value: aws-elasticbeanstalk-ec2-role
+            -
+                Namespace: aws:elasticbeanstalk:container:nodejs
+                OptionName: NodeCommand
+                Value: "npm start"
+\end{lstlisting}
+
+Dort werden zum Beispiel die Laufzeit und die Umgebungsvariablen über die ElasticBeanstalk Konfiguration festgelegt. Auch den Start Befehl beim hochfahren der Instanz kann man dort festlegen.\\
+ElasticBeanstalk legt neben den hier beschriebenen Services auch Services an, die nicht explizit konfiguriert werden, wie einen \textit{LoadBalancer}, \textit{CloudWatch} und verschiedenste Berechtigungen. Dies benötigt ElasticBeanstalk, um die automatische Skalierung überhaupt möglich zu machen. \\
+Die EC2 Instanz beinhaltet unsere NodeJS Applikation und stellt sowohl das Front- wie Backend. Mit einer API werden dort die Operationen auf den AWS-Services koordiniert und gesteuert. 
 
 \section{Authentifizierungsservice Cognito}
+%Inhaltlich gut
 Zur Authentifizierung von Nutzern wird der AWS Cognito verwendet. Der Nutzerpool \textit{Cognitopool} vom Typ \textit{AWS::Cognito::UserPool} ist so konfiguriert, dass bei der Registrierung eines neuen Nutzers ein Passwort angegeben werden muss, welches die Minimalvorrausetzung eines AWS-Cognito-Passworts erfüllt (Zeichenlänge von Sechs \cite{AWSD}). Für die Registriereung muss der Nutzer sich verifizieren. Dies geschieht hier über Email, in der der Nutzer seinen Bestätigungscode erhält. Die Formatierung dieser Email wird in \textit{EmailVerificationMessage} und \textit{EmailVerificationSubject} angegeben.  
 %COGNITO MINLÄNGE
 %https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-properties-cognito-userpool-passwordpolicy.html
@@ -242,16 +289,32 @@ CognitoPool:
 \end{lstlisting} 
 
 \section{Cloud-Speicher S3}
-Durch folgende Beschreibung in der Konfiguration wird ein Cloud-Speicher des Typs \textit{AWS::S3::Bucket} angelegt.
+Unsere Applikation benötigt insgesamt 3\textit{ S3- Buckets.} Der erste Bucket, auch später \textit{Code Bucket} genannt, wird nur temporär während des Aufbaus des Stacks benötigt. Cloudformation setzt die gezippte Anwendung inklusive Template Definition beim Aufbau voraus. Dieser Bucket wird beim entfernen des Stacks mit dem Deployment Script wieder gelöscht. \\
+Ein weiterer Bucket wird gebraucht, um die Daten der Nutzer zu speichern. Dort liegen ausschließlich die Nutzermediendaten. Dieser Bucket wird im folgenden User Bucket genannt. \\
+Zuletzt wird ein weiterer Bucket genutzt, um die Thumbnails der Bilder, die durch unseren LambdaService generiert werden, zu speichern. Der Thumbnail Bucket, hat ein Präfix \textit{thumbs} und sonst denselben generischen Namen wie der User Bucket. \\
+Durch folgende Beschreibung in der Konfiguration wird der Thumbnail Bucket erstellt.
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
-Bucket:
-        Type: AWS::S3::Bucket
+ThumbBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+        BucketName: !Sub
+            - thumbs{ResBucket}
+            - ResBucket: !Ref Bucket
 \end{lstlisting}          
-
+Auch die S3-Buckets haben in AWS eine automatische Skalierung inne. Sowohl in der Größe, wie auch in der genutzten Bandbreite ist der Speicher variabel und passt sich den Umständen an.
 
 \section{Datenbank DynamoDB}
+Aufgrund der Architektur der Applikation und der Festlegung die Infrastruktur in der Cloud laufen zu lassen, kam für uns nur eine NOSQL Datenbank wie DynamoDB in Frage. Eine SQL Datenbank, wäre für unseren Einsatz zwar möglich, würde aber nur zusätzliche Komplexität und Einschränkungen mit sich bringen. \\
 Das Erstellung einer Datenbanktabelle in der DynamoDB wird hier exemplarisch an der \textit{Permissions}-Tabelle vom Typ \textit{AWS::DynamoDB::Table} gezeigt. Anders als bei klassischen SQL-Datenbanken kann ein Eintrag in einer DynamoDB-Tabelle beliebige Felder beinhalten. Diese werden lediglich über den Schlüssel abgefragt. Um den Schlüssel einer Tabelle zu definieren muss der \textit{AttributeType}, der \textit{AttributeName} und der \textit{KeyType} innerhalb der \textit{AttributeDefinitions} und \textit{KeySchema} angegeben werden. Diese beiden Felder sind erforderlich, müssen also angegeben werden. Das selbe gilt für \textit{ProvisionedThroughput} \cite{AWSDa}.
 Dies bedeutet, dass die Skalierung nicht bei der Erstellung durch CloudFormation oder EBS eingestellt werden werden. Um die DynamoDB zu skalieren muss \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} im AWS-Account aktiv sein. Falls \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} bereits bei der Erstellung durch EB-Deploy aktiviert war skalieren die Tabellen,  ansonsten nicht. Das Autoscaling für die Tabellen kann dann jedoch nachträglich über die Management-Console eingestellt werden. Nähere Informationen hierzu sind in \cite{AWSDb} zu finden.
+\\
+
+%- Was ist das Problem. Nicht mehrere Sachen löschen nicht möglich.
+Da die DynamoDB nicht über die Möglichkeit verfügt, mehrere Einträge über einen Key zu entfernen, muss für die \textit{deleteWindow}-Funktion die gesamte \textit{File}-Liste und \textit{Permission}-Liste für den gegebenen Key eingelesen und jeder Eintrag einzeln in der DynamoDB entfernt werden.
+Um nicht jeden Listeneintrag einzeln zu entfernen kann zwar \textit{batchWriteItem} verwendet werden, dieses ist jedoch max. auf 25 DeleteItem-Operationen limitiert und es können keine \textit{conditions} angegeben werden \cite{AWSJSSDKD}. Aus diesem Grund werden die Items, wie hier einleitend erwähnt, einzeln entfernt.
+
+%deleteITEM AWS
+%https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#deleteItem-property
 
 %QUELLE allg.DYNDB
 %https://docs.aws.amazon.com/de_de/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
@@ -284,11 +347,13 @@ Permissions:
                 WriteCapacityUnits: "1"
 \end{lstlisting}
 
-
+Unsere Applikation benötigt 3 Tabellen. Eine Tabelle \textit{Files} speichert die Relation zwischen \textit{FileName}, \textit{WindowName} und \textit{User}. So kann man den jeweiligen Desktops die Dateien zuordnen, und auch die Besitzer der Dateien herausfinden. In der zweiten Tabelle \textit{Windows} werden der Desktop Namen \textit{WindowName}, der Besitzer \textit{Owner} und ein Flag ob der Desktop pubic ist oder nicht gespeichert.Die dritte Tabelle \textit{Permissions} ordnet den Desktops die Berechtigungen einzelner Nutzer zu. Die Spalten lautet hier \textit{Window}, \textit{User}. \textit{Permissions}. Die Permissions der einzelnen Nutzer werden als JSON gespeichert und beinhalten Informationen über das Recht Admin zu sein, lesen, schreiben oder löschen zu dürfen, auf den jeweiligen Desktop. \\
+In der Applikation wird bei jeder Operation überprüft ob der jeweilige Nutzer die Berechtigung hat dies zu tun.
 
 \section{Serverless-Functions Lambda}
-Bei der Konfiguration von Lambda in Cloudformation müssen mehrere Ressourcen beachtet werden. \\
-Unsere Lambda Funktion benötigt eine Rolle, die sowohl Permissions wie Policies hält. Die Rolle braucht die Erlaubnis Lambda Funktionen aufzurufen, wenn etwas in unseren UserBucket hochgeladen wird. Dies wird folgendermaßen konfiguriert:
+Der FaaS Dienst Lambda wird in unserer Applikation genutzt, um unabhängig von unserer EC2 Instanz die Vorschaubilder bzw. Thumbnails für die Bilder, die die Nutzer hochladen zu generieren. Der Vorteil von Lambda ist, dass man sich nicht um die Laufzeitumgebung kümmern muss und das man keine EC2 Instanz ständig laufen lassen muss, damit eine NodeJS Funktion eventbasierend ausgeführt wird. \\ 
+Bei der Konfiguration von Lambda in \textit{Cloudformation} müssen mehrere Ressourcen beachtet werden. \\
+Unsere Lambda Funktion benötigt eine Rolle, die sowohl \textit{Permissions} wie \textit{Policies} hält. Die Rolle braucht die Erlaubnis Lambda Funktionen aufzurufen, wenn etwas in unseren \textit{UserBucket} hochgeladen wird. Dies wird folgendermaßen konfiguriert:
 
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
 LambdaPermission:
@@ -326,10 +391,40 @@ LambdaThumbnail:
             Mode: "Active"
 \end{lstlisting}
 
-Wie man sieht gibt man in Zeile 3 den Einstiegspunkt mit, benutzt in den folgenden Zeilen die definierte Rolle und greift auf den gezippten Quellcode im definierten CodeBucket zu. Die restlichen Zeilen geben die Parameter für die Laufzeitumgebung an, wie die Arbeitsspeichergröße, den Funktionsname, die Laufzeit, Timeout und das erlaube XRAY Tracing. Auf das XRAY Tracing gehen wir später noch einmal ausführlicher ein.
+Wie man sieht gibt man in Zeile 3 den Einstiegspunkt mit, benutzt in den folgenden Zeilen die definierte Rolle und greift auf den gezippten Quellcode im definierten CodeBucket zu. Die restlichen Zeilen geben die Parameter für die Laufzeitumgebung an, wie die Arbeitsspeichergröße, den Funktionsname, die Laufzeit, Timeout und das erlaube XRAY Tracing.\\
+
+Die Funktion wird durch ein S3 \textit{s3:ObjectCreated:*} Event gestartet. Das Thumbnail Script filtert zuerst die Bilder aus den Anfragen, anhand der Dateiendungen heraus. Diese Bilder werden daraufhin verkleinert und in einen zweiten Bucket mit denselben Namen hochgeladen. Dieser zweite Bucket hat denselben Namen wie der Ursprungsbucket mit dem Präfix \textit{thumbs}. Damit kann man nun einfach aus dem NodeJS System auf das Thumbnail zugreifen. \\
+Ist das Thumbnail nicht vorhanden, wird ein generisches Vorschaubild erzeugt. 
+\subsection{XRAY}
+Wer eine Lambda Funktion über Cloudformation definiert und hochfährt wird unweigerlich über XRAY stolpern. Mit einer Fehlermeldung wie: 
+\begin{lstlisting}
+The provided execution role does not have permissions to
+call PutTraceSegments on XRAY
+\end{lstlisting}
+wird die Erstellung abgebrochen. Wird eine Lambda Funktion durch ein Service wie Cloudformation getriggert, braucht Lambda keine weiteren Berechtigungen, da Lambda diese in den Stack-Kontext bereits besitzt. Unser Lambda Service wird aber durch ein Event getriggert. Wenn ein User etwas in den Userbucket lädt, wird die Lambda Funktion ausgeführt. Dadurch fehlt der Funktion der Stack Kontext, auch wenn er durch jenen erstellt wurde. \\
+Seit Anfang 2018 \cite{AWSDe} ist es möglich durch hinzufügen von
+\begin{lstlisting}
+Properties:
+  TracingConfig:
+    Mode: "Active"
+\end{lstlisting} 
+in dem Service \textit{AWS::Lambda::Function} und mit 
+\begin{lstlisting}
+Properties:
+  PolicyDocument:
+  -
+    Effect: Allow
+    Action:
+    - xray:PutTraceSegments
+    - xray:PutTelemetryRecords
+    Resource: '*'
+\end{lstlisting} 
+in dem Lambda Funktion genutzte Policy \textit{AWS::IAM::Policy}
+%QUELLE XRAY
+%https://docs.aws.amazon.com/de_de/xray/latest/devguide/xray-services-lambda.html
 
 \section{Route53}
-Um die generierte ElasticBeanstalk Domain auf eine sprechender Domain zu mappen, in unserem Fall www.virtual-desktop.org, nutzen wir den Route53 Service. Die Konfiguration setzt eine registrierte Route53 Domain bei AWS voraus:
+Um die generierte ElasticBeanstalk Domain auf eine sprechender Domain zu mappen, in unserem Fall \textit{www.virtual-desktop.org}, nutzen wir den Route53 Service. Die Konfiguration setzt eine registrierte Route53 Domain bei AWS voraus:
 
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
 RouteDNS:
@@ -365,21 +460,27 @@ Um das zusammenarbeiten der einzelnen Services zu demonstrieren, zeigen wir beis
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.35]{login-flow.png} 
+\includegraphics[scale=0.35]{Flow-Dia-1.png} 
 \caption{User logt sich ein}
 \end{figure}
 
+Zwangsläufig ist der zeitlich gesehen erste AWS Service, den man als Nutzer begegnet der Route53 Service, der für das Routing der Domain \textit{www.virtual-desktop.org} auf die ElasticBeanstalk Domain zuständig ist. Daraufhin wird das Frontend von der EC2 Instanz dem Nutzer geliefert. Logt der Nutzer sich ein, wird von der Applikation mit Hilfe des \textit{Cognito} Services, der jeweilige Nutzer authentifiziert. Ist die Authentifizierung erfolgreich, wird in der DynamoDB über die API die Berechtigungen und die Desktops, die der Nutzer sehen darf abgefragt. Der Nutzer bekommt daraufhin die benötigten Daten in das Frontend gerendert und sieht alle Desktops auf die er Zugriff hat. \\
 
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.35]{Flow-Dia-2.png} 
+\caption{User logt sich ein}
+\end{figure}
+
+Das zweite Szenario beschreibt das hochladen eines Bildes auf einen Desktop. Lädt der Nutzer eine Datei in einen Desktop wird zuerst überprüft, ob er überhaupt Schreibberechtigung hat. Ist dies der Fall wird das Bild als Stream über die EC2 Instanz in den User Bucket hochgeladen. Der große Vorteil des Streams ist, dass die Datei nicht zuerst komplett in die EC2 Instanz geladen wird und von dort aus in den User Bucket geladen wird, sondern immer nur ein kleiner Teil in der EC2 Instanz liegt bevor die Datei in den User Bucket gelegt wird. Während des Uploadvorgangs bekommt der Nutzer ein Feedback, dass der Upload noch andauert. Sobald die Datei komplett auf dem S3 angekommen ist, sieht der Nutzer das Bild in den Desktop. Wird eine Datei mit der Endung \textit{jpg, jpeg oder png} in den User Bucket erstellt, wird durch ein S3 Event der Thumbnail Lambda Service gestartet und das Thumbnail wird in den \textit{thums} Bucket abgelegt. Besucht ein Nutzer nun das nächste Mal diesen Desktop sieht er das Bild mit Thumbnail auf dem Desktop.
 
 
 
 \chapter{Besonderheiten}
-Einleitung dazu: Weil zu viel gemacht - nur die interessante Teile näher erklärt.
+Im folgenden beleuchten wir möglichst kurz die unser Meinung nach interessanten Stellen der Umsetzung der Applikation.
 
 \section{Entwicklungsumgebung lokal / Env- Variablen in NodeJS}
-%- Was ist das Problem.\\ 
-%- Wie haben wir es gelöst\\
-%-  z.B. www Cognito
+%- Refs lösen
 
 Bei Elastic-Beanstalk-Projekten wird bei jedem Deploy die gesamte Umgebung mit allen AWS-Resourcen neu gestartet. Dies beinhaltet unter anderem die EC2-Instanz. Da bei Quellcodeänderungen ein Deploy erneut ausgeführt werden muss und die Instanziierung einer EC2-Instanz zeitaufwendig sein kann ist dies für die Entwicklung der Webanwendung nicht praktikabel. Aus diesem Grund wurden in Elastic-Beanstalk, Referenzen \cite{AWSDc} für die dynamisch angelegten Ressourcen erzeugt. Diese Referenzen können in Umgebungsvariablen der EC2-Instanzen übernommen werden, dies geschieht in der \textit{node-env-keys.config} \cite{AWSDd}.\\
 Um eine schnellere Entwicklung voranzutreiben wird dieser Umstand genutzt, indem statische (nicht durch EBS-Deploy generiert) Amazon Web Services erstellt und in die Umgebungsvariablen des Entwicklersystems hinzugefügt werden.
@@ -394,21 +495,8 @@ Hierbei ist zu beachten, dass lediglich die EC2-Instanzen durch den lokalen Rech
 %https://docs.aws.amazon.com/de_de/elasticbeanstalk/latest/dg/environments-cfg-softwaresettings.html
 
 
-
-\section{DynamoDB}
-%- Was ist das Problem. Nicht mehrere Sachen löschen nicht möglich.
-Da die DynamoDB nicht über die Möglichkeit verfügt, mehrere Einträge über einen Key zu entfernen, muss für die \textit{deleteWindow}-Funktion die gesamte \textit{File}-Liste und \textit{Permission}-Liste für den gegebenen Key eingelesen und jeder Eintrag einzeln in der DynamoDB entfernt werden.
-Um nicht jeden Listeneintrag einzeln zu entfernen kann zwar \textit{batchWriteItem} verwendet werden, dieses ist jedoch max. auf 25 DeleteItem-Operationen limitiert und es können keine \textit{conditions} angegeben werden \cite{AWSJSSDKD}. Aus diesem Grund werden die Items, wie hier einleitend erwähnt, einzeln entfernt.
-
-%deleteITEM AWS
-%https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#deleteItem-property
-
 \section{Promise / Dispatcher}
-%- Was ist das Problem. Wofür brauchen wir das. Wo war das problem.\\
-%- Erklären wieso wieso wir das bauen.\\
-%- Erklären was wir gebaut haben und wie.\\
-%- kann easy erweitert werden
-
+%ok
 
 Die Funktion der AWS-sdk arbeiten mit Callbacks, jedoch sind Aufgaben wie z.B. das Löschen von Desktops und deren Inhalt parallelisierbar, und müssen synchronisiert werden. Um dies zu bewerkstelligen, und um komplexe Callbackstrukturen zu vermeiden wurde eine \textit{dispatch}-Funktion für solche Aufgaben konzipiert. 
 
@@ -461,20 +549,13 @@ function deleteWindow(username, windowName, callback) {
 \noindent Zunächst wird der \textit{username} und \textit{windowName} durch \textit{checkParams} auf Existenz geprüft. Anschließend werden die Berechtigungen für den Benutzer durch \textit{getPermissions} aus der DynamoDB für den angegeben Desktop abgefragt. Die Berechtigungen sind nun im Kontext von \textit{checkPermissions} über \textit{dis.data} zugreifbar. Die \textit{checkPermissions}-Funktion setzt \textit{propagate} auf \textit{false}, falls der Nutzer nicht Besitzer des Desktops ist (und einen Fehler in \textit{dis.errors}-Array schreiben). Ansonsten wird der Desktop und alle dazugehörigen Inhalte und Berechtigungen gelöscht.    
 
 \section{Model-View-Controller}
-%- Warum brauchen wir das\\
-%- kann easy erweitertert werden\\
-%- Wie haben wir es gelöst
-
+%ok
 Um die parallele Entwicklung des Projektes gewährleisten zu können wird ein Model-View-Controller verwendet. Das Model beinhaltet hierbei die Amazon Web Services S3, DynamoDB, Cognito welche durch die \textit{virtual-desktop.js} in Schnittstellen abstrahiert wird und mittels NodeJS-Express-Server für den Controller zugänglich ist. Diese Abstraktion wurde vorgenommen, damit der NodeJS-Express-Server durch AWS-Lambda substituiert werden kann. Der NodeJS-Express-Server wird durch den Elastic-Beanstalk bereitgestellt. AWS-Lambda wird im Backend verwendet um für neue Dateien, welche durch den Nutzer in den S3-Bucket gespeichert werden Thumbnails zu erstellen.\\
 Die Schnittstelle \textit{api.js} im Frontend wird durch den Controller erweitert. Dieser Controller reagiert auf die Eingaben des Nutzers im Frontend, indem Controller-Funktionen angesprochen werden. Bei Bedarf werden Backend-Funktionen durch den Controller angesprochen und/oder im Frontend Events ausgelöst, wodurch dieses aktualisiert werden kann.
 Die Verwendung eines Controllers ist vorteilhaft um die spätere Einbindung von Push-Notifications mit geringem Aufwand zu realisieren.
 
-
-
 \section{Streaming Download / Upload}
-%- Was ist das Problem. Wofür brauchen wir das. Wo war das problem.\\
-%- Erklären wieso wieso wir das bauen.\\
-%- Erklären was wir gebaut haben und wie.
+%vielleicht screenshot von netzwerk tab bei video stream - stückchen
 
 Um Dateien von und in den S3-Bucket zu laden, können Buffer verwendet werden, dies bedeutet das die Dateien zunächst im Arbeitsspeicher oder im Speicher des NodeJS-Express-Server zwischengespeichert werden müssen. Da eine EC2-Instanz nur über ein begrenztes Volumen an Speicher verfügt, ist das Buffern von Dateien nicht empfehlenswert (erhöhte Kosten, Skalierung von EC2-Instanzen) \cite{AWS}.\\
 %https://aws.amazon.com/de/ec2/pricing/on-demand/
@@ -487,7 +568,6 @@ Aus diesem Grund werden die Dateien in diesem Projekt vom Backend gestreamt. Hie
 \item busboy-body-parser
 \item busboy
 \end{itemize}
-
 
 %TO DO: QUELLEN EINTRAGEN - in .BIB
 \noindent Die Middleware \textit{multer} und \textit{express-fileupload} kommen für das gestreamte Hochladen von Dateien auf den S3-Bucket nicht in Frage, da sie keine Streams unterstützen sondern entweder auf der Festplatte speichern  oder im Arbeitsspeicher buffern [quelle: multer, fileupload].
@@ -509,39 +589,6 @@ bytes=x-y
 %QUELLE: Range,206 723
 %https://www.rfc-editor.org/rfc/rfc7233.txt 
 
-\section{Lambda - Thumbnailgenerator}
-Im Rahmen der Darstellung unseres virtuellen Desktops brauchen wir Thumbnails um eine Vorschau der Bilder auf dem Desktop zu sehen. Für diese Funktion haben wir  uns entschlossen Lambda zu nutzen. Wir nutzen Lambda, um eine einzelne NodeJS-Funktion auszuführen. \\
-Die Funktion wird durch ein S3 \textit{s3:ObjectCreated:*} Event gestartet. Das Thumbnail Script filtert zuerst die Bilder aus den Anfragen, anhand der Dateiendungen heraus. Diese Bilder werden daraufhin verkleinert und in einen zweiten Bucket mit denselben Namen hochgeladen. Dieser zweite Bucket hat denselben Namen wie der Ursprungsbucket mit dem Präfix \textit{thumbs}. Damit kann man nun einfach aus dem NodeJS System auf das Thumbnail zugreifen. \\
-Ist das Thumbnail nicht vorhanden, wird ein generisches Vorschaubild erzeugt. 
-\subsection{XRAY}
-Wer eine Lambda Funktion über Cloudformation definiert und hochfährt wird unweigerlich über XRAY stolpern. Mit einer Fehlermeldung wie: 
-\begin{lstlisting}
-The provided execution role does not have permissions to
-call PutTraceSegments on XRAY
-\end{lstlisting}
-wird die Erstellung abgebrochen. Wird eine Lambda Funktion durch ein Service wie Cloudformation getriggert, braucht Lambda keine weiteren Berechtigungen, da Lambda diese in den Stack-Kontext bereits besitzt. Unser Lambda Service wird aber durch ein Event getriggert. Wenn ein User etwas in den Userbucket lädt, wird die Lambda Funktion ausgeführt. Dadurch fehlt der Funktion der Stack Kontext, auch wenn er durch jenen erstellt wurde. \\
-Seit Anfang 2018 \cite{AWSDe} ist es möglich durch hinzufügen von
-\begin{lstlisting}
-Properties:
-  TracingConfig:
-    Mode: "Active"
-\end{lstlisting} 
-in dem Service \textit{AWS::Lambda::Function} und mit 
-\begin{lstlisting}
-Properties:
-  PolicyDocument:
-  -
-    Effect: Allow
-    Action:
-    - xray:PutTraceSegments
-    - xray:PutTelemetryRecords
-    Resource: '*'
-\end{lstlisting} 
-in dem Lambda Funktion genutzte Policy \textit{AWS::IAM::Policy}
-%QUELLE XRAY
-%https://docs.aws.amazon.com/de_de/xray/latest/devguide/xray-services-lambda.html
-
-
 \chapter{Kosten - Aufwände}
 Um die etwaigen Kosten abzuschätzen haben wie den \textit{AWS-Gesamtbetriebskostenrechner} bedient. [QUELLE: KOSTENRECHNER] 
 %QUELLE KOSTENRECHNER
@@ -555,10 +602,7 @@ Würde man solch ein Projekt zur Umsetzung beauftragen, müsste man etwa mit Ent
 Um die Anwendung unverändert zum laufen zu bringen ist lediglich ein Befehl von Nöten. Dies würde keine Kosten verursachen. \\
 Wir haben während der Entwicklung sehr darauf gedachtet die Anwendung möglichst Erweiterbar zu entwickeln. Dies würde Kosten, die bei einer persönlichen Anpassung entstehen würden, gering halten.
 \section{Betriebskosten}
-- Aufführung der genutzten Services mit Bezug auf Kosten\\
-- Hochrechnung pro Monat und pro Nutzer (oder pro 100 Nutzer) \\
-- Grafik erstellen
-
+%costs all graphik einbinden
 Zur Kalkulation der Betriebskosten betrachten wir die laufenden Monatskosten für die folgenden Szenarien:\\
 \begin{itemize}
 \item Es werden 10 Anfragen pro Minute gestellt und \textbf{438000} pro Monat.
@@ -641,6 +685,12 @@ Mit diesen Parametern lassen sich folgende Kosten berechnen:
 	\item 1000 Anfragen pro Minute: 11.498,94 US-Dollar / 10129,30 Euro (Stand 23.01.2019) pro Monat
 	\item 1000000 Anfragen pro Minute: 237.918.977,63 US-Dollar / 209580448,20 Euro (Stand 23.01.2019) pro Monat 
 \end{enumerate}
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.81]{costs-overview.png}
+\caption{Kosten für 1000 Requests pro Minute}
+\end{figure}
 
 %@TODO: Grafiken raussuchen zu Kosten
 %\begin{figure}[h]
