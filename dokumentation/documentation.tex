@@ -79,13 +79,11 @@
 
 \chapter{Einführung}
 %Mit was, wer wo...
-Im Rahmen dieses Projektes ist eine Web-Anwendung unter Verwendung von Amazon Web-Services (AWS) entwickelt worden. Zunächst wird in diesem Kapitel die Idee vorgestellt, anschließend wird die Architektur und die Umsetzung thematisiert.
+Im Rahmen des Moduls Cloud Computing an der Hochschule Rhein Main im Wintersemester 2018 / 2019 bei Prof. Dr. Schaible eine Web-Anwendung unter Verwendung von Amazon Web-Services (AWS) entwickelt worden. Zunächst wird in diesem Kapitel die Idee vorgestellt, anschließend wird die Architektur und die Umsetzung thematisiert.
 
 \section{Projektanforderungen}
 %- Welche Anforderungen vom Modul\\
 %- Fokus des Projekts
-Folgende Projektanforderungen sind umzusetzen:
-\\ \\
 Es ist eine Web-Anwendung unter Verwendung von Amazon Web-Services (AWS) zu
 entwickeln, die mindestens folgende Funktionalitäten beinhalten soll.
 \begin{enumerate}
@@ -100,11 +98,12 @@ sein, die Multimedia-Daten entweder herunterzuladen oder zu streamen.
 \item Die Anwendung muss horizontal skalierbar sein. (Begründung!)
 \end{enumerate}
 Zusätzlich haben wir eigene Projektanforderungen hinzugefügt:
+%todo vieleicht auch, dass es unsere Entwickler aufgaben sind. Umschreiben wieso, der Zweck wer, mehr soll
 \begin{enumerate}
 \item Auslegung auf spätere Socketnutzung.
-\item Der Code liegt in einen öffentlichen Repo und damit verbunden ...
-\item Deploybar von jedermann. Keine statischen Variablen. Der Stack soll mit einen Befehl aufgebaut werden.
-\item Strikte Trennung von Model, View und Controller. 
+\item Der Code liegt in einen öffentlichen Repo.
+\item Der Stack ist von jedem Deploybar. Keine statischen Variablen. Der Stack soll mit einen Befehl aufgebaut werden.
+\item Trennung von Model, View und Controller. 
 \item Die NodeJS Funktionen sollen möglichst parallel laufen, um wartende Funktionen zu vermeiden.
 \item Die EC2 Instanz speichert keine Dateien, sondern \dq schleust\dq\ sie nur durch.
 \end{enumerate}
@@ -121,7 +120,7 @@ Mit zugewiesenen Leserechten kann der Nutzer Dateien betrachten und herunterlade
 Nutzer können auch Admin-Rechte erhalten, sodass diese für den Desktop Nutzerrechte bearbeiten und neue Nutzer hinzufügen dürfen. Ein angelegter Desktop kann aber nur vom Ersteller selbst entfernt werden.\\ 
 Es gibt also
 \begin{itemize} 
-\item[] \textbf{Owner}, die einen oder mehrere Desktops angelegt haben, zwischen diesen wechseln können und andere Nutzer durch Zuweisung von Lese- , Schreib- und Löschrechten zu ihren Desktops hinzufügen dürfen. Sie besitzen für ihre eigenen Desktops alle Rechte. Sie können auch Admin-Rechte, für die Bearbeitung von Nutzerrechten, vergeben.
+\item[] \textbf{Owner}, die einen oder mehrere Desktops angelegt haben, zwischen diesen wechseln können und andere Nutzer durch Zuweisung von Lese- , Schreib- und Löschrechten zu ihren Desktops hinzufügen können. Sie besitzen für ihre eigenen Desktops alle Rechte. Sie können auch Admin-Rechte, für die Bearbeitung von Nutzerrechten, vergeben.
 \item[] \textbf{User}, die Rechte für einen oder mehrere Desktops zugewiesen bekommen haben und zwischen diesen wechseln können und diesen Rechten entsprechend Aktionen ausführen dürfen.
 \end{itemize} 
 
@@ -135,14 +134,17 @@ Es gibt also
 Da Desktopnamen in \textit{VirtualDesktop} global eindeutig sind, kann dieser Desktop dann über den Desktopnamen geteilt und gefunden werden.
 \textit{User} haben auf einem, auf public gesetzten, Desktop nur Leserechte, außer ihnen wurden explizit weitere Rechte zugewiesen. 
 Nur dem \textit{Owner} ist es erlaubt den Desktop wieder auf privat zu setzen, auch \textit{Usern} mit Admin-Rechten für diesen Desktop ist dies nicht gestattet.
- 
 
 \chapter{Der Weg in die Cloud}
-Es gibt verschiedene Wege, wie man eine Web-Applikation aufsetzt. Die ersten Schritte wird man meist auf eine lokalen Entwicklungsumgebung machen, die man auch zum späteren entwickeln braucht. Irgendwann wird man sich aber die Frage stellen, wo die spätere Infrastruktur laufen wird. \\
+% todo klassiche web projekt beschreiben. probem mit max gleichzeitiger verbindungen. bild von vorlesung beschreiben. dran denken an wins. lieber kontrole abgeben mehr enwickeln. nodejs = geschätslogik
+(dadurch wird die skalierung schonmal besser)
+
+Es gibt verschiedene Wege, wie man eine Web-Applikation aufsetzt. Die ersten Schritte wird man meist auf einer lokalen Entwicklungsumgebung machen, die man auch zum späteren entwickeln braucht. Irgendwann wird man sich aber die Frage stellen, wo die spätere Infrastruktur laufen wird. \\
 Der Weg in die Cloud benötigt zu Beginn einen entscheidenden Schritt. Man muss sich für einen Cloudanbieter entscheiden. Es gibt verschiedenste Anbieter wie GoogleCloud von Google, AWS von Amazon oder Azure von Microsoft. \\
 Im Rahmen des Moduls CloudComputung an der HS-RM haben wir uns dazu entschlossen die Cloud Services von AWS - Amazon zu nutzen.
+\section{Warum geht man in die Cloud}
 
-\section{Anforderungen an die Cloud}
+\section{Anforderungen an die Skalierbarkeit}
 Unsere Projektanforderungen an die Architektur umfasst einen klassischen Aufbau eines Web Projektes mit folgenden Anforderungen. \\
 
 \begin{itemize}
@@ -152,48 +154,65 @@ Unsere Projektanforderungen an die Architektur umfasst einen klassischen Aufbau 
 \item Alle Zugriffe müssen authentifiziert werden.
 \item Skalierung soll jederzeit möglich sein, um beliebig viele Nutzer bedienen zu können.
 \end{itemize}
-Es wäre durchaus denkbar fast alle Punkte gut auf einer klassischen, nicht Cloudservice basierenden Serverumgebung umzusetzen. Aber spätestens bei der beliebigen Skalierung stößt man auf Probleme. 
+Es wäre durchaus denkbar die ersten vier Punkte gut auf einer klassischen, nicht Cloudservice basierenden Serverumgebung umzusetzen. Aber spätestens bei der beliebigen Skalierung stößt man auf Probleme. 
 \\
 Die auf einer klassischen Serverumgebung einfach mögliche vertikale Skalierung stößt schnell auf ihre Grenzen. Früher oder später wird vermutlich die Datenbank in jedem System der Flaschenhals werden und diese dann horizontal zu skalieren ist meist mit großen strukturellen und/oder architektonischen Änderungen verbunden.
 
 \section{Vorteile Infrastruktur}
-Eine Umsetzung in AWS bringt ein Umdenken mit sich. In AWS wird jeder Service wird in eigenen Teil gesplittet. Rechner, Speicher, Datenbank, Authentifizierung, Domainverwaltung sogar einzelne Funktionen liegen einzeln in AWS vor. Dadurch ist eine unabhängige Skalierung überhaupt möglich. \\
-Um das Projekt umzusetzen brauchen wir uns dank der Cloudservices nicht um dinge, wie den NodsJS Server, den Speicher, die Virtualisierung oder das Netzwerk kümmern. \\
+%dieser satz eher am anfang. villeicht ganze kapitel.
+Eine Umsetzung in AWS bringt ein Umdenken mit sich. In AWS wird jeder Service in eigenen Teil gesplittet. Rechner, Speicher, Datenbank, Authentifizierung, Domainverwaltung sogar einzelne Funktionen liegen einzeln in AWS vor. Dadurch ist eine unabhängige Skalierung überhaupt möglich. \\
+%todo umschreiben wir müssen schon kümmern = mappen
+Um das Projekt umzusetzen brauchen wir uns dank der Cloudservices nicht um Dinge, wie den NodsJS Server, den Speicher, die Virtualisierung oder das Netzwerk kümmern. \\
 Auch um die Laufzeitumgebung und um das Betriebssystem brauchen wir uns nicht kümmern. Wir legen sie lediglich fest. Dank der Cloudservices von AWS können wir uns nach dem Aufsetzen und Verknüpfen aller unser genutzten Service ganz auf die Programmierung konzentrieren.
 \section{Vorteile Skalierung}
+%vermutlich kann weg
 Das Hauptproblem von Anwendungen, die erfolgreich von vielen Nutzern genutzt wird ist die Skalierung.
 \subsection{Skalierung Plattform / Laufzeitumgebung}
+%todo Leastic Beasntalk geht gerade auf klassische webprojekte ab. Alle alten webanwendungen könnte man dort abbilden. (PHP, java ..). Das ist der erste Punkt. Wenn man noch verweden möchte einfach das. mit zunehmen kenntnissen voll auf aws diensten umsteigen dann ressourcen auslagern etc
 Auf unserer Laufzeitumgebung läuft ein NodeJS Server. Dieser wird durch Elastic-Beanstalk automatisch skaliert. Die Rechenleistung also die CPU, der Arbeitsspeicher wie der interne genutzte Speicher wird dynamisch je nach Bedarf angepasst. \\
-Eine klassische Umsetzung auf einen Server kann man lediglich vertikal skalieren und den Arbeitsspeicher oder den CPU aufrüsten. 
+Eine klassische Umsetzung auf einen Server kann man lediglich vertikal skalieren und den Arbeitsspeicher oder die CPU aufrüsten. 
 \subsection{Skalierung Speicher und Datenbank}
 Der Speicher wird bei AWS klassischerweise mit S3 umgesetzt. Der S3 Speicher hat eine Skalierung inkludiert. \\
+%todo umschreiben nicht sprechend. Typisch über SQL reden.
 Es gibt verschiedenste Datenbanktypen, die meisten sind nur schwer skalierbar. AWS bietet die DynamoDB an um Dokumente mit Schlüsselwerten zu speichern. DynamoDB skaliert ebenfalls automatisch. Die globalen DynamoDB Tabellen replizieren sich automatisch über mehrere AWS-Regionen \cite{AWSa}.\\
-@TODO: Das Problem mit dem Sachen einzeln holen. nochmal erwähnen. @Robin (ich kann das nicht)
 %QUELLE DYNAMODB
 %https://aws.amazon.com/de/dynamodb/
 \subsection{Skalierung Netzwerk}
-Auch um den Datendurchsatz bei der Netzwerkübertragung  braucht man sich dank verteilter Rechenzentren, die sich je nach Nutzungsort verändern können nicht zu kümmern. Plant man einen internationalen Einsatz ist ein Einsatz von Amazon CloudFront / CDN einfach erweiterbar \cite{AWSb}.%QUELLE CLOUDFRONT
+Auch um den Datendurchsatz bei der Netzwerkübertragung  braucht man sich dank verteilter Rechenzentren, die sich je nach Nutzungsort verändern können nicht zu kümmern. Plant man einen internationalen Einsatz ist ein Einsatz von Amazon CloudFront / CDN erweiterbar \cite{AWSb}.%QUELLE CLOUDFRONT
 %https://aws.amazon.com/de/cloudfront/
 \section{Sicherheit}
-Sicherheit ist ein großes Thema bei Cloud Services. Anstatt sich händisch darum zu kümmern sein System gegenüber Fremdangriffen zu schützen, kann man bei AWS auf die Expertise von Profis zurückgreifen. Sicherheitspatches werden automatisch eingespielt, über Firewall und Antiviren Programme braucht man sich keine Sorgen mehr machen. \\
+Anstatt sich händisch darum zu kümmern sein System aktuell bleibt, kann man bei Cloudservices auf die Expertise von Profis zurückgreifen. Updates und Sicherheitspatches werden automatisch eingespielt, über Firewall und Antiviren Programme braucht man sich keine Sorgen mehr machen. \\
 Außerdem nimmt AWS mit verschiedenen Services Sicherheitsimplementierungen ab. Cognito ermöglicht schnell und einfach eine Double Opt in Registrierung umzusetzen.
 \section{Kosten}
+%vom Monolith weg - hoch schieben man zahlt nur das was man verbraucht
 Die Skalierung klassischer Webprojekte läuft so, dass die Infrastruktur für die maximale Nutzung aufgebaut wird. Das bedeutet, dass bei hoher kurzzeitiger Nutzung Ressourcen aufgebaut werden, die dann kurz danach nicht mehr benötigt werden. Ein Rückbau wird selten gemacht und Ressourcen liegen brach.\\
-Dieses überpowern der Infrastruktur birgt vermeidbare Mehrkosten. AWS rechnet immer nur den aktuellen Verbrauch ab. Wird ein Server Nachts nicht genutzt, werden keine Kosten generiert. Alle zusätzlichen Kosten einer klassischen Infrastruktur wie Wartung, sind darin bereits inkludiert. 
+Dieses überpowern der Infrastruktur birgt vermeidbare Mehrkosten. AWS rechnet immer nur den aktuellen Verbrauch ab. Wird ein Server Nachts nicht genutzt, werden keine Kosten generiert. Alle zusätzlichen Kosten einer klassischen Infrastruktur wie Wartung, sind darin bereits inkludiert.
+\section{Was gibt es für Cloudanbieter}
+
+\section{CloudLockin}
+%todo CloudLockin gerade auf datenbank dynamoDB!
+%erster Abschnitt hierrein
+
 \chapter{Architektur}
 % Clouformation ansprechen
-%- Hier wie deploye ich rein
+% Hier wie deploye ich rein
 Um in AWS seinen Service Stack zu persistieren haben wir \textit{Clouformation} genutzt. In \textit{Cloudformation} wird anhand einer template Datei der Stack in yml oder json beschrieben. \\
-Wie bereits in den Anforderungen beschrieben, haben wir uns als Ziel gesetzt den gesamten Service Stack mit einen Befehl ausrollen zu können. Der Befehl mit den Parametern ist folgender:
+Wie bereits in den Anforderungen beschrieben, haben wir uns als Ziel gesetzt den gesamten Service Stack mit einen Befehl ausrollen zu können. Der Befehl mit den Parametern wird im setup Ordner ausgeführt und ist folgender:
 
 \begin{lstlisting}[xleftmargin=\parindent,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
 node index.js create <aws_key_id> <aws_access_key> 
 <stack_name> [<domainName>]
 \end{lstlisting}
 
-Die Voraussetzung, um unser Stack Deployment Script ausführen zu können ist die Installation von node, aws-sdk, archiver und fs. \\
-Mit der Ausführung des Scripts werden die Templates für den Stack und die Lambda Anwendung inklusive der benötigten Dateien in einen \textit{CodeBucket} gestreamt, womit in \textit{Cloudformation} dann die Anwendungen aufgebaut werden. Ein Abbau des Stacks ist ebenso möglich und wird nach dem ausführen des deployment Scripts ausgegeben. \\
+Die Voraussetzung, um unser Stack Deployment Script ausführen zu können ist die Installation von node und aws-cli und ein anschließendes npm install.
+Mit der Ausführung des Scripts werden die Lambda und unsere Anwendung inklusive der benötigten Dateien in einen \textit{CodeBucket} hochgeladen, womit in \textit{Cloudformation} dann die Anwendungen aufgebaut werden. Ein Abbau des Stacks ist ebenso möglich.
 
+\begin{lstlisting}[xleftmargin=\parindent,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+node index.js delete <aws_key_id> <aws_access_key>
+ <tmp_code_bucket_name> <stack_name>
+\end{lstlisting}
+
+Dieser Aufruf wird nach dem ausführen des deployment Scripts mit den bereits ausgefüllten Parametern ausgegeben. \\
 Die daraus entstehende Servicearchtitektur kann man in folgender Grafik zusammenfassen.
 
 \begin{figure}[h!]
@@ -205,8 +224,7 @@ Die daraus entstehende Servicearchtitektur kann man in folgender Grafik zusammen
 Im folgenden Kapitel werden die einzelnen Services und deren Konfiguration in \textit{Cloudformation} beschrieben. 
 
 \section{Elastic Beanstalk Konfiguration}
-Die zentrale Rechen- und 
-Operationseinheit ist unsere EC2 Instanz im ElasticBeanstalk Stack. Dieser Stack sorgt dafür, dass die EC2 Instanz im Speicher, in der Rechenleistung, im Netzwerk wie auch im Arbeitsspeicher je nach den derzeitiger Anforderung skaliert. Wie man in der Grafik sehen kann, braucht eine Elastic-Beanstalk Applikation auch immer ein Elastic-Beanstalk Umgebung und ein Konfigurationstemplate. In Auszügen zeige ich die ElasticBeanstalk Konfiguration.
+Die Geschäftslogik wird in unserer EC2 Instanz abgewickelt, welcher in ein ElasticBeanstalk Stack skaliert wird. Dieser Stack sorgt dafür, dass die EC2 Instanz im Speicher, in der Rechenleistung, im Netzwerk wie auch im Arbeitsspeicher je nach den derzeitiger Anforderung skaliert. Wie man in der Grafik sehen kann, braucht eine Elastic-Beanstalk Applikation auch immer ein Elastic-Beanstalk Umgebung und ein Konfigurationstemplate. In Auszügen zeige ich die ElasticBeanstalk Konfiguration.
 
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
 ElasticBS:
@@ -218,21 +236,24 @@ ElasticBS:
         Properties:
             ApplicationName:
                 Ref: ElasticBS
-            Description: ElasticBeanstalk VirtualDesktop Application Version
+            Description: ElasticBeanstalk VirtualDesktop
+             Application Version
             SourceBundle:
                 S3Bucket:
                     Ref: CodeBucket
                 S3Key: ebs.zip
 \end{lstlisting}
 Interessant ist hier die ElasticBeanstalk Appplikation zugrunde liegende Code, der in einen seperaten CodeBucket als zip vorliegt. Von dort aus wird die Applikation in der EC2 Instanz gebaut.
-Die ElasticBeanstalk Umgebung \textit{AWS::ElasticBeanstalk::Environment} beinhaltet die Konfiguration der eigentlichen Instanz.
+Die ElasticBeanstalk Umgebung
+ \textit{AWS::ElasticBeanstalk::Environment} beinhaltet die Konfiguration der eigentlichen Instanz.
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
     EnvironmentElasticBS:
         Type: AWS::ElasticBeanstalk::Environment
         Properties:
             ApplicationName:
                 Ref: ElasticBS
-            Description: AWS ElasticBeanstalk VirtualDesktop Environment
+            Description: AWS ElasticBeanstalk VirtualDesktop 
+            Environment
             TemplateName:
                 Ref: ConfigurationElasticBS
             VersionLabel:
@@ -251,6 +272,7 @@ Die ElasticBeanstalk Umgebung \textit{AWS::ElasticBeanstalk::Environment} beinha
 Dort werden zum Beispiel die Laufzeit und die Umgebungsvariablen über die ElasticBeanstalk Konfiguration festgelegt. Auch den Start Befehl beim hochfahren der Instanz kann man dort festlegen.\\
 ElasticBeanstalk legt neben den hier beschriebenen Services auch Services an, die nicht explizit konfiguriert werden, wie einen \textit{LoadBalancer}, \textit{CloudWatch} und verschiedenste Berechtigungen. Dies benötigt ElasticBeanstalk, um die automatische Skalierung überhaupt möglich zu machen. \\
 Die EC2 Instanz beinhaltet unsere NodeJS Applikation und stellt sowohl das Front- wie Backend. Mit einer API werden dort die Operationen auf den AWS-Services koordiniert und gesteuert. 
+%todo Configuration Template mit rein nehmen und beschreiben (nur einen Key zeigen)
 
 \section{Authentifizierungsservice Cognito}
 %Inhaltlich gut
@@ -384,7 +406,6 @@ LambdaThumbnail:
                 Ref: CodeBucket
             S3Key: "lambda.zip"
         MemorySize: "1024"
-        FunctionName: CreatePhotoThumbnail
         Runtime: "nodejs8.10"
         Timeout: "10"
         TracingConfig:
@@ -445,12 +466,6 @@ RouteDNS:
 Der Domain Name wird per Startparameter von den Cloudformation Start-Script gesetzt. Per \textit{ResourceRecords} wird die ElasticBeanstalk Domain gesetzt.
  
 \section{Wie arbeiten die Services zusammen}
-%- über NodeJS und Express(wegen Datentransformation JSON) ...
-%- Auth und Berechtigung prüfen- setzen von Rechten
-%- wie sehen die Tabellen aus
-%- wie findet das Computing statt
-%- kurz jede api-Funktion anreißen
-%
 
 Um das zusammenarbeiten der einzelnen Services zu demonstrieren, zeigen wir beispielhaft verschiedene Szenarien. Wir gehen in den einzelnen Szenarien unterschiedlich detailliert, auf die genutzten Dienste ein, um den Fokus nach unseren Wünschen zu setzen:
 \begin{itemize}
@@ -464,12 +479,12 @@ Um das zusammenarbeiten der einzelnen Services zu demonstrieren, zeigen wir beis
 \caption{User logt sich ein}
 \end{figure}
 
-Zwangsläufig ist der zeitlich gesehen erste AWS Service, den man als Nutzer begegnet der Route53 Service, der für das Routing der Domain \textit{www.virtual-desktop.org} auf die ElasticBeanstalk Domain zuständig ist. Daraufhin wird das Frontend von der EC2 Instanz dem Nutzer geliefert. Logt der Nutzer sich ein, wird von der Applikation mit Hilfe des \textit{Cognito} Services, der jeweilige Nutzer authentifiziert. Ist die Authentifizierung erfolgreich, wird in der DynamoDB über die API die Berechtigungen und die Desktops, die der Nutzer sehen darf abgefragt. Der Nutzer bekommt daraufhin die benötigten Daten in das Frontend gerendert und sieht alle Desktops auf die er Zugriff hat. \\
+Zeitlich gesehen ist der erste AWS Service, den man als Anwender nutzt der Route53 Service, der für das Routing der Domain \textit{www.virtual-desktop.org} auf die ElasticBeanstalk Domain zuständig ist. Daraufhin wird das Frontend von der EC2 Instanz dem Nutzer geliefert. Logt der Nutzer sich ein, wird von der Applikation mit Hilfe des \textit{Cognito} Services, der jeweilige Nutzer authentifiziert. Ist die Authentifizierung erfolgreich, wird in der DynamoDB über die API die Berechtigungen und die Desktops, die der Nutzer sehen darf abgefragt. Der Nutzer bekommt daraufhin die benötigten Daten in das Frontend gerendert und sieht alle Desktops auf die er Zugriff hat. \\
 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.35]{Flow-Dia-2.png} 
-\caption{User logt sich ein}
+\caption{User lädt ein Bild hoch}
 \end{figure}
 
 Das zweite Szenario beschreibt das hochladen eines Bildes auf einen Desktop. Lädt der Nutzer eine Datei in einen Desktop wird zuerst überprüft, ob er überhaupt Schreibberechtigung hat. Ist dies der Fall wird das Bild als Stream über die EC2 Instanz in den User Bucket hochgeladen. Der große Vorteil des Streams ist, dass die Datei nicht zuerst komplett in die EC2 Instanz geladen wird und von dort aus in den User Bucket geladen wird, sondern immer nur ein kleiner Teil in der EC2 Instanz liegt bevor die Datei in den User Bucket gelegt wird. Während des Uploadvorgangs bekommt der Nutzer ein Feedback, dass der Upload noch andauert. Sobald die Datei komplett auf dem S3 angekommen ist, sieht der Nutzer das Bild in den Desktop. Wird eine Datei mit der Endung \textit{jpg, jpeg oder png} in den User Bucket erstellt, wird durch ein S3 Event der Thumbnail Lambda Service gestartet und das Thumbnail wird in den \textit{thums} Bucket abgelegt. Besucht ein Nutzer nun das nächste Mal diesen Desktop sieht er das Bild mit Thumbnail auf dem Desktop.
@@ -590,17 +605,10 @@ bytes=x-y
 %https://www.rfc-editor.org/rfc/rfc7233.txt 
 
 \chapter{Kosten - Aufwände}
+%umrechnen Requests auf den Nutzer. Maximalen Storage pro Nutzer enführen
 Um die etwaigen Kosten abzuschätzen haben wie den \textit{AWS-Gesamtbetriebskostenrechner} bedient. [QUELLE: KOSTENRECHNER] 
 %QUELLE KOSTENRECHNER
 %https://calculator.s3.amazonaws.com
-\section{Entwicklungskosten}
-Im Laufe der Umsetzung des Projektes betrachten wir verschiedene Kostenstellen. Als reine Entwicklungskosten bezeichnen wir die Zeit, die wir benötigt haben das reine Produkt zu erstellen ohne die modulspezifischen Anforderungen wie Dokumentation oder die Präsentation. \\
-Wir haben im Laufe der Entwicklungszeit mit 3 Personen etwa \textbf{480 Stunden} gebraucht, um das Projekt umzusetzen. Bei einem Stundenlohn von 15 Euro würden sich die Entwicklungskosten auf etwa \textbf{7200 Euro} belaufen. \\
-Für die Umsetzung der Präsentation und Dokumentation haben wir etwa \textbf{60 Stunden} verwendet. Bei einem Stundenlohn von 15 Euro würden sich die Entwicklungskosten auf etwa \textbf{900 Euro} belaufen. \\
-Würde man solch ein Projekt zur Umsetzung beauftragen, müsste man etwa mit Entwicklungskosten von \textbf{8100 Euro} rechnen.
-\section{Einsetzungskosten}
-Um die Anwendung unverändert zum laufen zu bringen ist lediglich ein Befehl von Nöten. Dies würde keine Kosten verursachen. \\
-Wir haben während der Entwicklung sehr darauf gedachtet die Anwendung möglichst Erweiterbar zu entwickeln. Dies würde Kosten, die bei einer persönlichen Anpassung entstehen würden, gering halten.
 \section{Betriebskosten}
 %costs all graphik einbinden
 Zur Kalkulation der Betriebskosten betrachten wir die laufenden Monatskosten für die folgenden Szenarien:\\
@@ -733,9 +741,10 @@ Folgende Punkte bieten Ausbaupotential:
 \item Wir haben eine eigene EC2 Instanz auf einen ElasticBeanstalk anstatt Lambda Funktionen gewählt, auch weil wir vor hatten Sockets zu implementieren. Diese Sockets würden den Nutzer die Möglichkeit geben Änderungen auf einen geteilten Desktop live zu sehen. 
 \item Dank unserer vorausschauenden Programmierstruktur, haben wir die Funktionen die aufgerufen werden können wie, Auflisten der Elemente im Desktop, Auflisten der verschiedenen Desktops usw. möglichst weit gekapselt. Dadurch wäre der komplette Umbau auf Lambda theoretisch möglich. Dennoch würden wir keinen kompletten Umstieg auf Lambda empfehlen, da es auch Gründe gibt die bei manchen Funktionen dagegen spricht. Wie zum Beispiel das feste Lambda-Limit der Zeitüberschreitung von 15 Minuten. Ein Up- oder Download bei großen Dateien kann aber auch über 15 Minuten dauern und würde dann zum Abbruch führen.
 \item Ein relativ einfaches Feature, dass man hinzufügen könnte wäre das hinzufügen eines SSL Zertifikates zu der EC2 Instanz beziehungsweise zum Route53 Service, um das Surfen über verschlüsselte Aufrufe über https zu ermöglichen. 
-\item Gerade bei der Kostenoptimierung wäre ein direkter Zugriff auf die S3 Daten von Vorteil. Wie man in unserer Übersicht der Betriebskosten sieht ist dieses \emph{durchschleusen} ein großer Kostenfaktor. AWS bietet an mit Supercookies Nutzer direkt auf die S3 Daten zugreifen zu lassen, auch bei Streams.
+\item Gerade bei der Kostenoptimierung wäre ein direkter Zugriff auf die S3 Daten von Vorteil. Wie man in unserer Übersicht der Betriebskosten sieht ist dieses \emph{durchschleusen} ein großer Kostenfaktor. AWS bietet an mit speziellen \glqq Whitelist\grqq  Cookies Nutzer direkt auf die S3 Daten zugreifen zu lassen, auch bei Streams.
 \item Ein weitere Idee die Kosten zu verringern, wäre die Nutzerdaten auf keinen S3-Bucket zu lagern sondern auf den AWS-Glacier. Dieser verspricht geringere Kosten bei vielen Datenmengen.
 \item Auch das verlagern des Thumbnailservices in die ständig laufenden EC2 Instanzen würden die Kosten für den Lambda Service einsparen.
+\item Das Setup Script nimmt zur Zeit Parameter entgegen, diese können auf einem unix system mit zum beispiel dem komandozeilenbefehl "top" von anderen Nutzern eingesehen werden, da die Parameter die AWS credials beinhalten, sollte das script so angepasst werden das diese aus der credials datei von aws ausgelessen werden (wie auch die aws-cli) bwziehungsweise die credials innerhalb der anwendung vom benutzer abgefragt werden.
 \end{itemize}
 
 

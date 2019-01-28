@@ -12,14 +12,14 @@ Resources:
         Properties:
             AttributeDefinitions:
                 -
-                    AttributeName: "File"
+                    AttributeName: "FileName"
                     AttributeType: "S"
                 -
                     AttributeName: "WindowName"
                     AttributeType: "S"
             KeySchema:
                 -
-                    AttributeName: "File"
+                    AttributeName: "FileName"
                     KeyType: "HASH"
                 -
                     AttributeName: "WindowName"
@@ -82,6 +82,26 @@ Resources:
             GenerateSecret: false
             UserPoolId:
                 Ref: CognitoPool
+    Bucket:
+        Type: AWS::S3::Bucket
+        DependsOn:
+            - LambdaThumbnail
+            - LambdaPermission
+        Properties:
+            NotificationConfiguration:
+                LambdaConfigurations:
+                - 
+                    Function:
+                        Fn::GetAtt:
+                        - LambdaThumbnail
+                        - Arn
+                    Event: s3:ObjectCreated:*
+    ThumbBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: !Sub
+                - thumbs${ResBucket}
+                - ResBucket: !Ref Bucket
     ElasticBS:
         Type: AWS::ElasticBeanstalk::Application
         Properties:
@@ -243,28 +263,7 @@ Resources:
                     Ref: CodeBucket
                 S3Key: "lambda.zip"
             MemorySize: "1024"
-            FunctionName: CreatePhotoThumbnail
             Runtime: "nodejs8.10"
             Timeout: "10"
             TracingConfig:
                 Mode: "Active"
-    Bucket:
-        Type: AWS::S3::Bucket
-        DependsOn:
-            - LambdaThumbnail
-            - LambdaPermission
-        Properties:
-            NotificationConfiguration:
-                LambdaConfigurations:
-                - 
-                    Function:
-                        Fn::GetAtt:
-                        - LambdaThumbnail
-                        - Arn
-                    Event: s3:ObjectCreated:*
-    ThumbBucket:
-        Type: AWS::S3::Bucket
-        Properties:
-            BucketName: !Sub
-                - thumbs${ResBucket}
-                - ResBucket: !Ref Bucket
