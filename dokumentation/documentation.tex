@@ -16,7 +16,7 @@
 \usepackage[pdfborder={0 0 0}]{hyperref}
 \usepackage{listings}
 \renewcommand\_{\textunderscore\allowbreak}
-
+\usepackage{float}
 
 \usepackage{caption}
 
@@ -143,7 +143,7 @@ Es gibt verschiedene Wege, wie man eine Web-Applikation aufsetzt. Die ersten Sch
 Der Weg in die Cloud benötigt zu Beginn einen entscheidenden Schritt. Man muss sich für einen Cloudanbieter entscheiden. Es gibt verschiedenste Anbieter wie GoogleCloud von Google, AWS von Amazon oder Azure von Microsoft. \\
 Im Rahmen des Moduls CloudComputung an der HS-RM haben wir uns dazu entschlossen die Cloud Services von AWS - Amazon zu nutzen.
 \section{Warum geht man in die Cloud}
-
+asd
 \section{Anforderungen an die Skalierbarkeit}
 Unsere Projektanforderungen an die Architektur umfasst einen klassischen Aufbau eines Web Projektes mit folgenden Anforderungen. \\
 
@@ -217,12 +217,13 @@ Die daraus entstehende Servicearchtitektur kann man in folgender Grafik zusammen
 
 \begin{figure}[h!]
 \centering
-\includegraphics[scale=0.24]{template1-designer.png} 
-\caption{Architektur Virtual-Desktop}
+\includegraphics[scale=0.45]{ArchiDiagram.png} 
+\caption{Architekturdiagramm Virtual-Desktop}
 \end{figure}
 
 Im folgenden Kapitel werden die einzelnen Services und deren Konfiguration in \textit{Cloudformation} beschrieben. 
 
+\newpage
 \section{Elastic Beanstalk Konfiguration}
 Die Geschäftslogik wird in unserer EC2 Instanz abgewickelt, welcher in ein ElasticBeanstalk Stack skaliert wird. Dieser Stack sorgt dafür, dass die EC2 Instanz im Speicher, in der Rechenleistung, im Netzwerk wie auch im Arbeitsspeicher je nach den derzeitiger Anforderung skaliert. Wie man in der Grafik sehen kann, braucht eine Elastic-Beanstalk Applikation auch immer ein Elastic-Beanstalk Umgebung und ein Konfigurationstemplate. In Auszügen zeige ich die ElasticBeanstalk Konfiguration.
 
@@ -483,8 +484,8 @@ Zeitlich gesehen ist der erste AWS Service, den man als Anwender nutzt der Route
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.35]{Flow-Dia-2.png} 
-\caption{User lädt ein Bild hoch}
+\includegraphics[scale=0.6]{Flow-Dia-12.png}
+\caption{User läd ein Bild hoch}
 \end{figure}
 
 Das zweite Szenario beschreibt das hochladen eines Bildes auf einen Desktop. Lädt der Nutzer eine Datei in einen Desktop wird zuerst überprüft, ob er überhaupt Schreibberechtigung hat. Ist dies der Fall wird das Bild als Stream über die EC2 Instanz in den User Bucket hochgeladen. Der große Vorteil des Streams ist, dass die Datei nicht zuerst komplett in die EC2 Instanz geladen wird und von dort aus in den User Bucket geladen wird, sondern immer nur ein kleiner Teil in der EC2 Instanz liegt bevor die Datei in den User Bucket gelegt wird. Während des Uploadvorgangs bekommt der Nutzer ein Feedback, dass der Upload noch andauert. Sobald die Datei komplett auf dem S3 angekommen ist, sieht der Nutzer das Bild in den Desktop. Wird eine Datei mit der Endung \textit{jpg, jpeg oder png} in den User Bucket erstellt, wird durch ein S3 Event der Thumbnail Lambda Service gestartet und das Thumbnail wird in den \textit{thums} Bucket abgelegt. Besucht ein Nutzer nun das nächste Mal diesen Desktop sieht er das Bild mit Thumbnail auf dem Desktop.
