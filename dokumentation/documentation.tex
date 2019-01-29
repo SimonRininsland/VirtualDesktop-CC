@@ -580,7 +580,8 @@ bytes=x-y
 %QUELLE: Range,206 723
 %https://www.rfc-editor.org/rfc/rfc7233.txt 
 
-\chapter{Kosten}
+\chapter{Analyse}
+\section{Kosten}
 %umrechnen Requests auf den Nutzer. Maximalen Storage pro Nutzer enführen
 Um die etwaigen Kosten abzuschätzen haben wie den \textit{AWS-Gesamtbetriebskostenrechner} bedient. [QUELLE: KOSTENRECHNER] 
 %QUELLE KOSTENRECHNER
@@ -634,7 +635,7 @@ Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. [QU
 \begin{table}[]
 \begin{tabular}{|l|l|l|l|l}
 \cline{1-4}
-          & \textbf{10 Nutzer} & \textbf{1000 Nutzer} & \textbf{1000000 Nutzer} &  \\ \cline{1-4}
+      \textbf{Kosten pro Monat}    & \textbf{10 Nutzer} & \textbf{1000 Nutzer} & \textbf{1000000 Nutzer} &  \\ \cline{1-4}
 \textbf{EC2} & 4,18 USD & 8,86 USD & 5.203,66 USD &  \\ 
 \cline{1-4}
 \textbf{S3} & 0,14 USD & 11,06 USD &     9.936,76 USD &  \\ 
@@ -655,9 +656,9 @@ Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. [QU
 \end{table}
 
 \begin{enumerate}
-	\item 10 Nutzer pro Monat: 15,20 US-Dollar / 13,30 Euro (Stand 23.01.2019) pro Monat
-	\item 1000 Nutzer pro Monat: 998,57 US-Dollar / 873,75 Euro (Stand 23.01.2019) pro Monat
-	\item 1000000 Nutzer pro Monat: 582.070,51 US-Dollar / 509.311,70 Euro (Stand 23.01.2019) pro Monat 
+	\item 10 Nutzer pro Monat: 15,20 US-Dollar oder \textbf{13,30} Euro (Stand 23.01.2019)
+	\item 1000 Nutzer pro Monat: 998,57 US-Dollar oder \textbf{873,75} Euro (Stand 23.01.2019)
+	\item 1000000 Nutzer pro Monat: 582.070,51 US-Dollar oder \textbf{509.311,70 Euro} (Stand 23.01.2019) 
 \end{enumerate}
 
 \begin{figure}[h!]
@@ -672,7 +673,7 @@ Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. [QU
 \caption{Kosten der Services für 1 Millionen Nutzer}
 \end{figure}
 
-\section{Bewertung}
+\subsection{Bewertung Kosten}
 Interessant an der Kostenrechnung ist sowohl die Entwicklung der einzelnen Services im Vergleich, wie auch die Entwicklung der Kosten pro Nutzer. So Erkennt man, dass in allen Fällen die AWS Data OUT, also die Kosten die AWS veranschlagt um Daten aus der AWS hinaus zu transportieren in allen Szenarien mit Abstand die höchsten sind. \\
 Weitaus interessanter ist die Entwicklung der Kosten pro Nutzer. Auch wenn der Kostenbetrag am Ende sehr hoch klingt, wäre er bereits ab einen Preis pro Nutzer von 0,60 USD gedeckt. Unser Dienst wäre dementsprechend schnell rentabel.
 
@@ -686,6 +687,7 @@ Weitaus interessanter ist die Entwicklung der Kosten pro Nutzer. Auch wenn der K
 %https://dashbird.io/lambda-cost-calculator/
 %QUELLE AWSRECHNER
 %https://calculator.s3.amazonaws.com
+\section{Skalierung}
 
 \chapter{Ausblick}
 Im Zuge einer Weiterentwicklung haben wir folgende Punkte gefunden, wodurch man den Funktionsumfang oder die Kosten bei AWS reduzieren könnte. Durch unser ständiges Augenmerk bei der Entwicklung auf Erweiterbarkeit, sollte es recht einfach sein unseren Code zu erweitern. \\
