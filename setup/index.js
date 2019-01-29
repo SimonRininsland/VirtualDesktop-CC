@@ -21,7 +21,7 @@ if(argv[0] == 'create' && argv[1] && argv[2] && argv[3]) {
 	var srcPassZip = new require('stream').PassThrough();
 	srcArchive.on('error', function(err){ console.log(err); });
 	srcArchive.pipe(srcPassZip);
-	srcArchive.glob("**/*", {cwd: "../src/express/"});
+	srcArchive.glob("**/*", {cwd: "../src/express/", dot:true});
 	srcArchive.finalize();
 
 	// lambda ZIP

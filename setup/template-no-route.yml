@@ -12,14 +12,14 @@ Resources:
         Properties:
             AttributeDefinitions:
                 -
-                    AttributeName: "File"
+                    AttributeName: "FileName"
                     AttributeType: "S"
                 -
                     AttributeName: "WindowName"
                     AttributeType: "S"
             KeySchema:
                 -
-                    AttributeName: "File"
+                    AttributeName: "FileName"
                     KeyType: "HASH"
                 -
                     AttributeName: "WindowName"
