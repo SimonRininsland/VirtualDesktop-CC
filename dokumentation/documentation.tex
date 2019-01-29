@@ -97,15 +97,14 @@ Multimedia-Daten (Bilder, Audio, Video) integriert werden. Es muss dabei möglic
 sein, die Multimedia-Daten entweder herunterzuladen oder zu streamen.
 \item Die Anwendung muss horizontal skalierbar sein. (Begründung!)
 \end{enumerate}
-Zusätzlich haben wir eigene Projektanforderungen hinzugefügt:
-%todo vieleicht auch, dass es unsere Entwickler aufgaben sind. Umschreiben wieso, der Zweck wer, mehr soll
+Zusätzlich haben wir folgende eigene Projektanforderungen hinzugefügt:
 \begin{enumerate}
-\item Auslegung auf spätere Socketnutzung.
-\item Der Code liegt in einen öffentlichen Repo.
-\item Der Stack ist von jedem Deploybar. Keine statischen Variablen. Der Stack soll mit einen Befehl aufgebaut werden.
-\item Trennung von Model, View und Controller. 
-\item Die NodeJS Funktionen sollen möglichst parallel laufen, um wartende Funktionen zu vermeiden.
-\item Die EC2 Instanz speichert keine Dateien, sondern \dq schleust\dq\ sie nur durch.
+\item Die Anwendung soll auf spätere Socketnutzung ausgelegt sein.
+\item Der Code soll in einen öffentlichen Repository liegen.
+\item Der Stack ist von jedem Deploybar. Das Template des Stacks soll also nur mit variablen Namen arbeiten und der Stack soll mit einen Befehl aufgebaut werden.
+\item Der Code der Anwendung soll sauber in Model, View und Controller getrennt sein. 
+\item Die NodeJS Funktionen sollen möglichst parallel arbeiten.
+\item Der Up- und Download soll über Streams geschehen, um auf der Laufzeitumgebung keine Daten speichern zu müssen.
 \end{enumerate}
 
 \section{VirtualDesktop}
@@ -136,62 +135,25 @@ Da Desktopnamen in \textit{VirtualDesktop} global eindeutig sind, kann dieser De
 Nur dem \textit{Owner} ist es erlaubt den Desktop wieder auf privat zu setzen, auch \textit{Usern} mit Admin-Rechten für diesen Desktop ist dies nicht gestattet.
 
 \chapter{Der Weg in die Cloud}
-% todo klassiche web projekt beschreiben. probem mit max gleichzeitiger verbindungen. bild von vorlesung beschreiben. dran denken an wins. lieber kontrole abgeben mehr enwickeln. nodejs = geschätslogik
-(dadurch wird die skalierung schonmal besser)
-
-Es gibt verschiedene Wege, wie man eine Web-Applikation aufsetzt. Die ersten Schritte wird man meist auf einer lokalen Entwicklungsumgebung machen, die man auch zum späteren entwickeln braucht. Irgendwann wird man sich aber die Frage stellen, wo die spätere Infrastruktur laufen wird. \\
-Der Weg in die Cloud benötigt zu Beginn einen entscheidenden Schritt. Man muss sich für einen Cloudanbieter entscheiden. Es gibt verschiedenste Anbieter wie GoogleCloud von Google, AWS von Amazon oder Azure von Microsoft. \\
-Im Rahmen des Moduls CloudComputung an der HS-RM haben wir uns dazu entschlossen die Cloud Services von AWS - Amazon zu nutzen.
-\section{Warum geht man in die Cloud}
-asd
-\section{Anforderungen an die Skalierbarkeit}
 Unsere Projektanforderungen an die Architektur umfasst einen klassischen Aufbau eines Web Projektes mit folgenden Anforderungen. \\
 
 \begin{itemize}
-\item Eine Laufumgebung auf der NodeJS läuft.
+\item Eine Anwendungsumgebung, die die Geschäftslogik abbildet.
 \item Eine Datenbank, die auch mit vielen Zugriffen schnell bleibt.
 \item Einen Speicher, der die Daten von den Nutzern speichert.
 \item Alle Zugriffe müssen authentifiziert werden.
+\item Das System soll immer sicher sein.
 \item Skalierung soll jederzeit möglich sein, um beliebig viele Nutzer bedienen zu können.
+\item Die Kosten sollen möglichst gering sein.
 \end{itemize}
-Es wäre durchaus denkbar die ersten vier Punkte gut auf einer klassischen, nicht Cloudservice basierenden Serverumgebung umzusetzen. Aber spätestens bei der beliebigen Skalierung stößt man auf Probleme. 
+Es wäre durchaus denkbar die ersten fünf Punkte gut auf einer lokalen Serverumgebung umzusetzen. Spätestens aber bei der beliebigen Skalierung stößt man auf Probleme. 
 \\
-Die auf einer klassischen Serverumgebung einfach mögliche vertikale Skalierung stößt schnell auf ihre Grenzen. Früher oder später wird vermutlich die Datenbank in jedem System der Flaschenhals werden und diese dann horizontal zu skalieren ist meist mit großen strukturellen und/oder architektonischen Änderungen verbunden.
-
-\section{Vorteile Infrastruktur}
-%dieser satz eher am anfang. villeicht ganze kapitel.
-Eine Umsetzung in AWS bringt ein Umdenken mit sich. In AWS wird jeder Service in eigenen Teil gesplittet. Rechner, Speicher, Datenbank, Authentifizierung, Domainverwaltung sogar einzelne Funktionen liegen einzeln in AWS vor. Dadurch ist eine unabhängige Skalierung überhaupt möglich. \\
-%todo umschreiben wir müssen schon kümmern = mappen
-Um das Projekt umzusetzen brauchen wir uns dank der Cloudservices nicht um Dinge, wie den NodsJS Server, den Speicher, die Virtualisierung oder das Netzwerk kümmern. \\
-Auch um die Laufzeitumgebung und um das Betriebssystem brauchen wir uns nicht kümmern. Wir legen sie lediglich fest. Dank der Cloudservices von AWS können wir uns nach dem Aufsetzen und Verknüpfen aller unser genutzten Service ganz auf die Programmierung konzentrieren.
-\section{Vorteile Skalierung}
-%vermutlich kann weg
-Das Hauptproblem von Anwendungen, die erfolgreich von vielen Nutzern genutzt wird ist die Skalierung.
-\subsection{Skalierung Plattform / Laufzeitumgebung}
-%todo Leastic Beasntalk geht gerade auf klassische webprojekte ab. Alle alten webanwendungen könnte man dort abbilden. (PHP, java ..). Das ist der erste Punkt. Wenn man noch verweden möchte einfach das. mit zunehmen kenntnissen voll auf aws diensten umsteigen dann ressourcen auslagern etc
-Auf unserer Laufzeitumgebung läuft ein NodeJS Server. Dieser wird durch Elastic-Beanstalk automatisch skaliert. Die Rechenleistung also die CPU, der Arbeitsspeicher wie der interne genutzte Speicher wird dynamisch je nach Bedarf angepasst. \\
-Eine klassische Umsetzung auf einen Server kann man lediglich vertikal skalieren und den Arbeitsspeicher oder die CPU aufrüsten. 
-\subsection{Skalierung Speicher und Datenbank}
-Der Speicher wird bei AWS klassischerweise mit S3 umgesetzt. Der S3 Speicher hat eine Skalierung inkludiert. \\
-%todo umschreiben nicht sprechend. Typisch über SQL reden.
-Es gibt verschiedenste Datenbanktypen, die meisten sind nur schwer skalierbar. AWS bietet die DynamoDB an um Dokumente mit Schlüsselwerten zu speichern. DynamoDB skaliert ebenfalls automatisch. Die globalen DynamoDB Tabellen replizieren sich automatisch über mehrere AWS-Regionen \cite{AWSa}.\\
-%QUELLE DYNAMODB
-%https://aws.amazon.com/de/dynamodb/
-\subsection{Skalierung Netzwerk}
-Auch um den Datendurchsatz bei der Netzwerkübertragung  braucht man sich dank verteilter Rechenzentren, die sich je nach Nutzungsort verändern können nicht zu kümmern. Plant man einen internationalen Einsatz ist ein Einsatz von Amazon CloudFront / CDN erweiterbar \cite{AWSb}.%QUELLE CLOUDFRONT
-%https://aws.amazon.com/de/cloudfront/
-\section{Sicherheit}
-Anstatt sich händisch darum zu kümmern sein System aktuell bleibt, kann man bei Cloudservices auf die Expertise von Profis zurückgreifen. Updates und Sicherheitspatches werden automatisch eingespielt, über Firewall und Antiviren Programme braucht man sich keine Sorgen mehr machen. \\
-Außerdem nimmt AWS mit verschiedenen Services Sicherheitsimplementierungen ab. Cognito ermöglicht schnell und einfach eine Double Opt in Registrierung umzusetzen.
-\section{Kosten}
-%vom Monolith weg - hoch schieben man zahlt nur das was man verbraucht
-Die Skalierung klassischer Webprojekte läuft so, dass die Infrastruktur für die maximale Nutzung aufgebaut wird. Das bedeutet, dass bei hoher kurzzeitiger Nutzung Ressourcen aufgebaut werden, die dann kurz danach nicht mehr benötigt werden. Ein Rückbau wird selten gemacht und Ressourcen liegen brach.\\
-Dieses überpowern der Infrastruktur birgt vermeidbare Mehrkosten. AWS rechnet immer nur den aktuellen Verbrauch ab. Wird ein Server Nachts nicht genutzt, werden keine Kosten generiert. Alle zusätzlichen Kosten einer klassischen Infrastruktur wie Wartung, sind darin bereits inkludiert.
-\section{Was gibt es für Cloudanbieter}
-
-\section{CloudLockin}
-%todo CloudLockin gerade auf datenbank dynamoDB!
-%erster Abschnitt hierrein
+Die auf einer klassischen Serverumgebung einfach mögliche vertikale Skalierung stößt schnell auf ihre Grenzen. Früher oder später wird vermutlich die Datenbank in jedem System der Flaschenhals werden und diese dann horizontal zu skalieren ist meist mit großen strukturellen und/oder architektonischen Änderungen verbunden. Es gibt verschiedenste Datenbanktypen, die meist genutzten sind nur schwer skalierbar. Cloudanbieter bieten Datenbanken an, die automatisch skalieren und die sich automatisch über mehrere Regionen replizieren. Alleine diese Datenbankskalierung wäre mit sehr viel händischen Aufwand und Kosten verbunden. \\ 
+Anstatt sich händisch darum zu kümmern, dass sein System aktuell bleibt, kann man bei Cloudservices auf die Expertise vom Cloudanbieter zurückgreifen. Updates und Sicherheitspatches werden automatisch eingespielt. \\
+Die Skalierung klassischer Webprojekte läuft so, dass die Infrastruktur für die maximale Nutzung aufgebaut wird. Das bedeutet, dass bei hoher kurzzeitiger Nutzung Ressourcen aufgebaut werden, die dann kurz danach nicht mehr benötigt werden. Ein Rückbau wird selten gemacht und Ressourcen liegen brach. Dieses überpowern der Infrastruktur birgt vermeidbare Mehrkosten. Cloudanbieter rechnen immer nur den aktuellen Verbrauch ab. Wird ein Server Nachts nicht genutzt, werden keine Kosten generiert. Alle zusätzlichen Kosten einer klassischen Infrastruktur wie Wartung, sind darin bereits inkludiert. \\
+Das Problem einer klassischen Webanwendung ist der Monolith als Server, in dem alle Services enthalten sind. Skalierung in einer beliebigen Größe ist nur möglich, wenn alle Services getrennt voneinander skalierbar sind. Cloudanbieter bieten dann an diese einzelnen Services getrennt laufen zu lassen und zu skalieren. \\
+Es gibt verschiedene Cloudanbieter wie GoogleCloud von Google, Azure von Microsoft oder AWS von Amazon. Hat man sich für einen Anbieter entschieden bringt dies ein Problem mit sich den \textit{Cloud-Lock-In}. Der \textit{Cloud-Lock-In} beschreibt das festgefahrene Setup auf einen Cloudanbieter. Ein Umzug ist meist nur mit hohen Aufwand möglich. Außerdem gibt man mit dem Weg in die Cloud Kontrolle ab. Viele Parameter, werden vom Cloudanbieter gesteuert, die man nicht mehr in der Hand hat. \\
+Wir haben uns für unser Projekt für AWS von Amazon entschieden.
 
 \chapter{Architektur}
 % Clouformation ansprechen
@@ -273,7 +235,20 @@ Die ElasticBeanstalk Umgebung
 Dort werden zum Beispiel die Laufzeit und die Umgebungsvariablen über die ElasticBeanstalk Konfiguration festgelegt. Auch den Start Befehl beim hochfahren der Instanz kann man dort festlegen.\\
 ElasticBeanstalk legt neben den hier beschriebenen Services auch Services an, die nicht explizit konfiguriert werden, wie einen \textit{LoadBalancer}, \textit{CloudWatch} und verschiedenste Berechtigungen. Dies benötigt ElasticBeanstalk, um die automatische Skalierung überhaupt möglich zu machen. \\
 Die EC2 Instanz beinhaltet unsere NodeJS Applikation und stellt sowohl das Front- wie Backend. Mit einer API werden dort die Operationen auf den AWS-Services koordiniert und gesteuert. 
-%todo Configuration Template mit rein nehmen und beschreiben (nur einen Key zeigen)
+
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+ConfigurationElasticBS:
+        Type: AWS::ElasticBeanstalk::ConfigurationTemplate
+        Properties:
+            ApplicationName:
+                Ref: ElasticBS
+            Description: AWS ElasticBeanstalk VirtualDesktop Configuration
+            OptionSettings:
+            -
+                Namespace: aws:autoscaling:asg
+                OptionName: MinSize
+                Value: '1'
+\end{lstlisting}
 
 \section{Authentifizierungsservice Cognito}
 %Inhaltlich gut
@@ -605,129 +580,106 @@ bytes=x-y
 %QUELLE: Range,206 723
 %https://www.rfc-editor.org/rfc/rfc7233.txt 
 
-\chapter{Kosten - Aufwände}
+\chapter{Kosten}
 %umrechnen Requests auf den Nutzer. Maximalen Storage pro Nutzer enführen
 Um die etwaigen Kosten abzuschätzen haben wie den \textit{AWS-Gesamtbetriebskostenrechner} bedient. [QUELLE: KOSTENRECHNER] 
 %QUELLE KOSTENRECHNER
 %https://calculator.s3.amazonaws.com
-\section{Betriebskosten}
-%costs all graphik einbinden
+
 Zur Kalkulation der Betriebskosten betrachten wir die laufenden Monatskosten für die folgenden Szenarien:\\
 \begin{itemize}
-\item Es werden 10 Anfragen pro Minute gestellt und \textbf{438000} pro Monat.
-\item Es werden 1000 Anfragen pro Minute gestellt und \textbf{43800000} pro Monat.
-\item Es werden 1000000 Anfragen pro Minute gestellt und \textbf{43800000000} pro Monat.
+\item Die Anwendung wird von 10 Nutzern genutzt.
+\item Die Anwendung wird von 1000 Nutzern genutzt.
+\item Die Anwendung wird von 1000000 Nutzern genutzt.
 \end{itemize}
 
-Da die verschiedenen Funktionen unserer Anwendung verschiedene Kosten verursachen gehen wir davon aus, dass die Requests etwa gleich verteilt auf unsere verschiedenen Funktionen aufgegliedert sind wie Einloggen, Desktop wechseln, Bild hochladen, Datei hochladen usw. Dies würde bedeuten, dass die Hälfte der Requests \\
+Um die Kosten einer Anwendung in AWS schätzen zu können, ist eine detaillierte Analyse der einzelnen Funktionen der Anwendung nötig. Wir haben sowohl den Datendurchsatz, wie auch die benötigten Requests der einzelnen API Aufrufe betrachtet. Auch der benötigte Traffic der eigentlichen Anwendungsauslieferung und Lamba muss betrachtet werden.\\ 
+Ein Nutzer bedient in unseren Szenarien folgende Funktionen jeden Tag. Diese Daten werden danach auf ein Monat hochgerechnet. \\
+\textbf{Einen Nutzer pro Tag} ...
+\begin{enumerate}
+\item kann maximal 5GB in seinen Desktop speichern.
+\item logt sich 3 mal an Tag ein.
+\item lädt Dateien hoch wie:
+\begin{enumerate}
+\item 3 Bilder (wie jpeg, jpg, png...) 9MB
+\item 2 Textdateien (txt, docx, odt...) 2MB
+\item 3 Musik (mp3) 12MB
+\item 0,3 Videos (avi, mp4) 500MB
+\end{enumerate}
+\item erstellt oder löscht 1/6 Desktop
+\item switcht 6 Desktops
+\item setzt und löscht 1/2 Permissions
+\item setzt 1/18 Desktop public
+\end{enumerate}
+Damit haben wir folgende Aufrufe oder Traffic für \textbf{einen Nutzer pro Tag}
+\begin{enumerate}
+\item DynamoDB GET: 264.2
+\item DynamoDB SCAN: 38.33
+\item DynamoDB DELETE: 8.96
+\item DynamoDB PUT: 8.96
+\item S3 GET: 83
+\item S3 PUT: 8,3
+\item S3 DELETE: 8,3
+\item Lambda: 16,6
+\item Cognito: 1 MAU
+\item S3 DATA: 173 MB
+\item Traffic Service-AWS: 1 MB
+\item Traffic VirtualDesktop: 173 MB
+\item Route 53 Abfragen: 110
+\end{enumerate}
+Diese Daten wurden für die weitere Berechnung pro Monat herangezogen.
 Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. [QUELLE: AWSRECHNER] Für Lambda wurde folgender Rechner genutzt. [QUELLE: LAMBDARECHNER]
 \\
-Wir setzen folgende Variablen fest:
-\begin{lstlisting}
-MINUTE-REQUESTS: Minuetliche Requests
-MONTH-REQUESTS: Totale monatliche Requests
-\end{lstlisting} 
-Damit würden sich dann folgende Parameter ergeben, die jeweils für die verschiedenen Szenarien in den \textit{AWS Simply Monthly Calculator} einzutragen sind.
-\begin{enumerate}
-	\item EC2 Instanz
-	\begin{enumerate}
-		\item Amazon EC2-Instances: 1/10 * MINUTE-REQUESTS
-		\item Typ: Linux für m1.small
-		\item EBS-Volumes: 1/10 * MINUTE-REQUESTS
-		\item EBS-Volumes-Speicher: 2GB Speicher
-		\item Ausgehende Datenübertragungen: 1/10 MINUTE-REQUESTS TB pro Monat
-		\item Eingehende Datenübertragungen: 1/10 MINUTE-REQUESTS TB pro Monat
-	\end{enumerate}
-	\item S3 Requests
-	\begin{enumerate}
-		\item Standard Storage: 10 * \textit{MINUTE-REQUESTS} in GB
-		\item PUT/COPY/POST/LIST Requests: 1/3 * \textit{MONTH-REQUESTS}
-		\item GET- und andere Anfragen: 1/3 * \textit{MONTH-REQUESTS}
-		\item Data Returned by S3 Select: 10 * \textit{MINUTE-REQUESTS}
-		\item Ausgehende Datenübertragungen: \textit{MONTH-REQUESTS} GB
-		\item Eingehende Datenübertragungen: \textit{MONTH-REQUESTS} GB
-	\end{enumerate}
-	\item Lambda Requests
-	\begin{enumerate}
-		\item Executian a Month: 1/5 * MONTH-REQUESTS
-		\item Memory Allocation in MB: 256
-		\item Duration in MS: 2000
-	\end{enumerate}
-	\item DynamoDB
-	\begin{enumerate}
-		\item Größe Datenvolumen: 1 GB
-		\item Elementgröße: 1 KB
-		\item Total number of items read per second: 1/60 * MINUTE-REQUESTS
-		\item Number of items written per second: 1/60 * MINUTE-REQUESTS
-	\end{enumerate}
-	\item Route53
-	\begin{enumerate}
-		\item Hostet Zones: 1
-		\item Standardabfragen: MONTH-REQUESTS
-	\end{enumerate}
-\end{enumerate}
-
-Mit diesen Parametern lassen sich folgende Kosten berechnen:
 
 \begin{table}[]
 \begin{tabular}{|l|l|l|l|l}
 \cline{1-4}
-          & \textbf{10 pro Minute} & \textbf{1000 pro Minute} & \textbf{1000000 pro Minute} &  \\ \cline{1-4}
-\textbf{EC2} & 4,18 USD & 8,86 USD & 52.003,66 USD &  \\ 
+          & \textbf{10 Nutzer} & \textbf{1000 Nutzer} & \textbf{1000000 Nutzer} &  \\ \cline{1-4}
+\textbf{EC2} & 4,18 USD & 8,86 USD & 5.203,66 USD &  \\ 
 \cline{1-4}
-\textbf{S3} & 3,34 USD & 344,20 USD &     230.416.764,76 USD &  \\ 
+\textbf{S3} & 0,14 USD & 11,06 USD &     9.936,76 USD &  \\ 
 \cline{1-4}
-\textbf{Route53} & 0,70 USD & 17,70 USD & 8.960,50 USD &  \\ 
+\textbf{Route53} & 0,90 USD & 2,10 USD & 882,50 USD &  \\ 
 \cline{1-4}
-\textbf{DynamoDB} & 0,00 USD & 0,31 USD & 31,00 USD &  \\ 
+\textbf{DynamoDB} & 0,31 USD & 3,05 USD & 13.349,48 USD &  \\ 
 \cline{1-4}
 \textbf{AWS Data IN} & 0,00 USD & 0,00 USD & 0,00 USD      &  \\ 
 \cline{1-4}
-\textbf{AWS Data OUT} & 131,49 USD & 11.053,11 USD & 7.366.451,11 USD &  \\
+\textbf{AWS Data OUT} & 9,63 USD & 969,11 USD & 543.891,11 USD &  \\
 \cline{1-4}
-\textbf{LAMBDA} & 2,03 USD & 74,76 USD & 74.766,60 USD &  \\ \cline{1-4}
+\textbf{Cognito} & 0,00 USD & 0,00 USD & 4.415,00 USD &  \\ \cline{1-4}
+\textbf{LAMBDA} & 0,04 USD & 4,39 USD & 4.392,00 USD &  \\ \cline{1-4}
+\textbf{Gesamt} & \textbf{15,20 USD} & \textbf{998,57 USD} & \textbf{582.070,51 USD} &  \\ \cline{1-4}
+\textbf{Kosten pro Nutzer} & 1,52 USD & 0,99 USD & 0,58 USD &  \\ \cline{1-4}
 \end{tabular}
 \end{table}
 
 \begin{enumerate}
-	\item 10 Anfragen pro Minute: 141,74 US-Dollar / 124,86 Euro (Stand 23.01.2019) pro Monat
-	\item 1000 Anfragen pro Minute: 11.498,94 US-Dollar / 10129,30 Euro (Stand 23.01.2019) pro Monat
-	\item 1000000 Anfragen pro Minute: 237.918.977,63 US-Dollar / 209580448,20 Euro (Stand 23.01.2019) pro Monat 
+	\item 10 Nutzer pro Monat: 15,20 US-Dollar / 13,30 Euro (Stand 23.01.2019) pro Monat
+	\item 1000 Nutzer pro Monat: 998,57 US-Dollar / 873,75 Euro (Stand 23.01.2019) pro Monat
+	\item 1000000 Nutzer pro Monat: 582.070,51 US-Dollar / 509.311,70 Euro (Stand 23.01.2019) pro Monat 
 \end{enumerate}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 \centering
-\includegraphics[scale=0.81]{costs-overview.png}
-\caption{Kosten für 1000 Requests pro Minute}
+\includegraphics[scale=1]{costs-overview.png}
+\caption{Kosten der Service im Vergleich}
 \end{figure}
 
-%@TODO: Grafiken raussuchen zu Kosten
-%\begin{figure}[h]
-%\centering
-%\includegraphics[scale=1]{costs-10.png}
-%\caption{Kosten für 10 Requests pro Minute}
-%\end{figure}
-%\begin{figure}[h]
-%\centering
-%\includegraphics[scale=1]{costs-1000.png}
-%\caption{Kosten für 1000 Requests pro Minute}
-%\end{figure}
-%\begin{figure}[h]
-%\centering
-%\includegraphics[scale=1]{costs-1000000.png}
-%\caption{Kosten für 1000000 Requests pro Minute}
-%\end{figure}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.75]{million-costs.png}
+\caption{Kosten der Services für 1 Millionen Nutzer}
+\end{figure}
 
-\subsection{Bewertung}
-Wie man erkennen kann, ist aus Kostengründen bei einer sehr großen Filesharing Plattform (> 10.000 Aufrufe pro Minute) von unserer Umsetzung abzuraten. Die Kosten für den S3 Service wären untragbar. Denkbar wäre hier, wie später im Ausblick erwähnt, eine Umsetzung in \emph{Amazon Glacier.}\\
-Interessanterweise ist die DynamoDB sehr \emph{günstig}, da die meisten Anfragen in einen freien Kontingent laufen und unsere Anfragen an die Datenbank sehr klein sind (<1KB). \\
-Das verlagern des \textit{Speicherplatzproblems} von der EC2 Instanz nach S3 macht sich hier deutlich. Anstatt, dass die Kosten bei den EC2 Instanzen stark steigen, scheinen sie exponentiell im S3 Service zu steigen. Dies zeigt, dass wir für unsere Anwendung versucht haben möglichst viel aus der EC2 Instanz auszulagern. \\
-Dank unseren schlanken Lambda Service, läuft dieser nur knapp 2 Sekunden und verbraucht <256Mbyte Arbeitsspeicher. Dadurch bleiben die Kosten überschaubar. Es ist dennoch interessant, dass sie bereits ab 1000 Aufrufen pro Minute die Kosten für die EC2 Instanzen übersteigen. 
+\section{Bewertung}
+Interessant an der Kostenrechnung ist sowohl die Entwicklung der einzelnen Services im Vergleich, wie auch die Entwicklung der Kosten pro Nutzer. So Erkennt man, dass in allen Fällen die AWS Data OUT, also die Kosten die AWS veranschlagt um Daten aus der AWS hinaus zu transportieren in allen Szenarien mit Abstand die höchsten sind. \\
+Weitaus interessanter ist die Entwicklung der Kosten pro Nutzer. Auch wenn der Kostenbetrag am Ende sehr hoch klingt, wäre er bereits ab einen Preis pro Nutzer von 0,60 USD gedeckt. Unser Dienst wäre dementsprechend schnell rentabel.
 
 
-%10 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-2F0F41AC-C39D-4904-B349-2E27EC03B134&r=FRA
-%1000 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-D5DAB655-81D7-4FD6-B3D3-449FBD41FFC5&r=FRA
-%1000000 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-77814ED1-00F9-4058-8401-E0D1D464D215&r=FRA
+%10 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-8CABA020-322B-4A90-9C2A-32D0DAA9BF27&r=FRA
+%1000 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-3DA5EE1E-4F75-498F-8036-433A14F2C7C5&r=FRA
+%1000000 = https://calculator.s3.amazonaws.com/index.html?lng=de_DE#key=calc-522435CB-583B-4AEE-9FDD-E90FFB3BED47&r=FRA
 
 
 %QUELLE LAMBDARECHNER
@@ -745,7 +697,7 @@ Folgende Punkte bieten Ausbaupotential:
 \item Gerade bei der Kostenoptimierung wäre ein direkter Zugriff auf die S3 Daten von Vorteil. Wie man in unserer Übersicht der Betriebskosten sieht ist dieses \emph{durchschleusen} ein großer Kostenfaktor. AWS bietet an mit speziellen \glqq Whitelist\grqq  Cookies Nutzer direkt auf die S3 Daten zugreifen zu lassen, auch bei Streams.
 \item Ein weitere Idee die Kosten zu verringern, wäre die Nutzerdaten auf keinen S3-Bucket zu lagern sondern auf den AWS-Glacier. Dieser verspricht geringere Kosten bei vielen Datenmengen.
 \item Auch das verlagern des Thumbnailservices in die ständig laufenden EC2 Instanzen würden die Kosten für den Lambda Service einsparen.
-\item Das Setup Script nimmt zur Zeit Parameter entgegen, diese können auf einem unix system mit zum beispiel dem komandozeilenbefehl "top" von anderen Nutzern eingesehen werden, da die Parameter die AWS credials beinhalten, sollte das script so angepasst werden das diese aus der credials datei von aws ausgelessen werden (wie auch die aws-cli) bwziehungsweise die credials innerhalb der anwendung vom benutzer abgefragt werden.
+\item Das Setup Script nimmt zur Zeit Parameter entgegen, diese können auf einem unix system mit zum Beispiel dem Kommandozelenprogramm "top" von anderen Nutzern eingesehen werden. Da die Parameter die AWS Credials beinhalten, sollte das Script so angepasst werden, dass diese aus der Credials Datei von AWS ausgelesen werden (wie auch die aws-cli) beziehungsweiße die Credials innerhalb der Anwendung vom Benutzer abgefragt werden.
 \end{itemize}
 
 
