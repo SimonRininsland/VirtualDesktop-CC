@@ -6,8 +6,8 @@ var gm = require('gm')
 var util = require('util');
 
 // constants
-var MAX_WIDTH  = 100;
-var MAX_HEIGHT = 100;
+var MAX_WIDTH  = 320;
+var MAX_HEIGHT = 180;
 
 // get reference to S3 client 
 var s3 = new AWS.S3();
