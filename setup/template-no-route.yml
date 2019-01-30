@@ -262,7 +262,7 @@ Resources:
                 S3Bucket:
                     Ref: CodeBucket
                 S3Key: "lambda.zip"
-            MemorySize: "1024"
+            MemorySize: "256"
             Runtime: "nodejs8.10"
             Timeout: "10"
             TracingConfig:

@@ -1,101 +1,74 @@
-// dependencies
-var async = require('async');
-var AWS = require('aws-sdk');
-var gm = require('gm')
-            .subClass({ imageMagick: true }); // Enable ImageMagick integration.
-var util = require('util');
-
-// constants
-var MAX_WIDTH  = 320;
-var MAX_HEIGHT = 180;
-
-// get reference to S3 client 
-var s3 = new AWS.S3();
+// PACKAGES
+var util        = require('util');
+var async       = require('async');
+var AWS         = require('aws-sdk');
+var gm          = require('gm').subClass({ imageMagick: true });
+var s3          = new AWS.S3();
+// MaxWITDTH and HEIGHT
+var MAX_WIDTH   = 320;
+var MAX_HEIGHT  = 180;
  
 exports.handler = function(event, context, callback) {
-    console.log(event);
-    // Read options from the event.
     console.log("Reading options from event:\n", util.inspect(event, {depth: 5}));
     var srcBucket = event.Records[0].s3.bucket.name;
-    // Object key may have spaces or unicode non-ASCII characters.
-    var srcKey    =
-    decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));  
+    // remove UniCodes
+    var srcKey    = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));  
+    // custom BucketName
     var dstBucket = "thumbs"+srcBucket;
+    // make destination and src key the same
     var dstKey    = srcKey;
-
-    // Sanity check: validate that source and destination are different buckets.
-    if (srcBucket == dstBucket) {
-        callback("Source and destination buckets are the same.");
-        return;
-    }
-
-    // Infer the image type.
+    // Image type
     var typeMatch = srcKey.match(/\.([^.]*)$/);
     if (!typeMatch) {
         callback("Could not determine the image type.");
         return;
     }
-    var imageType = typeMatch[1];
-    if (imageType != "jpg" && imageType != "png" && imageType != "jpeg") {
-        callback('Unsupported image type: ${imageType}');
+    // allow image types
+    if (typeMatch[1] != "jpg" && typeMatch[1] != "png" && typeMatch[1] != "jpeg") {
+        callback('Unsupported image type: ${typeMatch[1]}');
         return;
     }
-
-    // Download the image from S3, transform, and upload to a different S3 bucket.
+    // S3 Bucket WaterFall
     async.waterfall([
         function download(next) {
-            // Download the image from S3 into a buffer.
+            // S3 Bucket Download
             s3.getObject({
                     Bucket: srcBucket,
                     Key: srcKey
-                },
-                next);
+                }, next);
             },
         function transform(response, next) {
             gm(response.Body).size(function(err, size) {
-                // Infer the scaling factor to avoid stretching the image unnaturally.
+                // Scaling Factor
                 var scalingFactor = Math.min(
                     MAX_WIDTH / size.width,
                     MAX_HEIGHT / size.height
                 );
-                var width  = scalingFactor * size.width;
-                var height = scalingFactor * size.height;
 
-                // Transform the image buffer in memory.
-                this.resize(width, height)
-                    .toBuffer(imageType, function(err, buffer) {
-                        if (err) {
-                            next(err);
-                        } else {
-                            next(null, response.ContentType, buffer);
-                        }
+                // Scale images
+                this.resize(scalingFactor * size.width, scalingFactor * size.height)
+                    .toBuffer(typeMatch[1], function(err, buffer) {
+                        if (err) next(err);
+                        else next(null, response.ContentType, buffer);
                     });
             });
         },
         function upload(contentType, data, next) {
-            // Stream the transformed image to a different S3 bucket.
+            // Bucket Stream
             s3.putObject({
                     Bucket: dstBucket,
                     Key: dstKey,
                     Body: data,
                     ContentType: contentType
-                },
-                next);
+                }, next);
             }
         ], function (err) {
+            //Write Error Log in Lambda Console
             if (err) {
-                console.error(
-                    'Unable to resize ' + srcBucket + '/' + srcKey +
-                    ' and upload to ' + dstBucket + '/' + dstKey +
-                    ' due to an error: ' + err
-                );
+                console.error('Unable to resize ' + srcBucket + '/' + srcKey + ' and upload to ' + dstBucket + '/' + dstKey + ' due to an error: ' + err);
             } else {
-                console.log(
-                    'Successfully resized ' + srcBucket + '/' + srcKey +
-                    ' and uploaded to ' + dstBucket + '/' + dstKey
-                );
+                console.log('Successfully resized ' + srcBucket + '/' + srcKey + ' and uploaded to ' + dstBucket + '/' + dstKey);
             }
-
             callback(null, "message");
         }
     );
