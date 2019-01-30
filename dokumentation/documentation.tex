@@ -379,8 +379,8 @@ LambdaPermission:
             - Arn
         Principal: "s3.amazonaws.com"
 \end{lstlisting}
-
-Außerdem wird eine Policy erstellt, um Logs und S3 Objekte zu schreiben und XRAYs verfolgen zu können.\\
+\bigskip
+\noindent Außerdem wird eine Policy erstellt, um Logs und S3 Objekte zu schreiben und XRAYs verfolgen zu können.\\
 Die Lambda Funktion benutzt dann diese Rolle, um alle Dinge zu bewerkstelligen die wir für das erstellen der Thumbnails benötigen. Die Lambda Funktion wird folgendermaßen konfiguriert:
 \bigskip
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
@@ -396,7 +396,7 @@ LambdaThumbnail:
             S3Bucket:
                 Ref: CodeBucket
             S3Key: "lambda.zip"
-        MemorySize: "1024"
+        MemorySize: "256"
         Runtime: "nodejs8.10"
         Timeout: "10"
         TracingConfig:
@@ -465,21 +465,20 @@ Um das zusammenarbeiten der einzelnen Services zu demonstrieren, zeigen wir beis
 \item Ein Nutzer löscht ein Desktop.
 \end{itemize}
 
-
-Sobald man einen REST Call absetzt ist der erste AWS Service, den man als Anwender nutzt, der Route53 Service, der für das Routing der Domain \textit{www.virtual-desktop.org} auf die ElasticBeanstalk Domain zuständig ist. Dieser nutzt einen LoadBalancer, um auf eine EC2 Instanz zu kommen die dann die Identität des Nutzers anhand seines Authentifizierungscookie mit Cognito überprüft. \\
+\noindent Sobald man einen REST Call absetzt ist der erste AWS Service, den man als Anwender nutzt, der Route53 Service, der für das Routing der Domain \textit{www.virtual-desktop.org} auf die ElasticBeanstalk Domain zuständig ist. Dieser nutzt einen LoadBalancer, um auf eine EC2 Instanz zu kommen die dann die Identität des Nutzers anhand seines Authentifizierungscookie mit Cognito überprüft. \\
 Die Anfrage des Nutzers wird nun im Nutzerkontext ausführt, falls der Cookie gesetzt und valide ist. Danach wird überprüft ob für den REST Call die benötigten Parameter korrekt gesetzt sind. \\
 Dies Schritte werden bei jedem REST Call durchgeführt. Mit Ausnahme der add-, list- und leaveWindow REST Calls werden nun die Permissions aus der Permissiosn Table der DynamoDB aufgerufen und mit den benötigten Permissions für den Call abgeglichen. Falls der Benutzer berechtigt ist wird dieser in seinen Benutzerkontext ausgeführt. Ab diesem Punkt sind weitere Aktionen REST Call abhängig. \\ \\
 Dies wird anhand folgender der Szenarien \textit{addFile} und der parallelarbeitenden \textit{removeWindow} gezeigt:
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.4]{AddFile-Szenario.png} 
-\caption{Ablauf eines Fileuploades}
+\includegraphics[scale=0.35]{AddFile-Szenario.png} 
+\caption{Ablauf eines Fileuploads.}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.4]{DeleteWindow-Szenario.png}
+\includegraphics[scale=0.35]{DeleteWindow-Szenario.png}
 \caption{Ablauf des Desktop Löschens.}
 \end{figure}
 
@@ -601,10 +600,10 @@ bytes=x-y
 
 \section{Nginx Configuration}
 
-In AWS hat der Nginx in jeder EC2 Instanz eine Standardkonfiguration. Diese Standard Configuration setzt zum Beispiel mit \lstinline|"client_max_body_size 1m;"| \cite{NGINX} die maximale Dateigröße des Bodys, also die hochzuladende Dateigröße, auf 1MB.\\
-Lädt man nun Dateien in den ElasticBeanstalk bzw. auf die EC2 Instanz hoch, wird ein \lstinline|"413 (Request Entity Too Large)"| geworfen. Auf dieses Problem stößt jeder, der mit einer EC2 Instanz arbeitet und größere Dateien in die EC2 Instanz hochladen möchte.
-Mit einer \lstinline|"nginx.config"| in einen \lstinline|".ebextensions"| Ordner kann man die Nginx Configuration anpassen. 
-Unsere Configuration passt lediglich die \lstinline|"client_max_body_size"| an:\\
+In AWS hat der Nginx in jeder EC2 Instanz eine Standardkonfiguration. Diese Standard Configuration setzt zum Beispiel mit \lstinline|client_max_body_size 1m;| \cite{NGINX} die maximale Dateigröße zur Kommunikation auf 1MB.\\
+Lädt man nun Dateien in den ElasticBeanstalk bzw. auf die EC2 Instanz hoch oder hinunter, wird ein \glqq413 (Request Entity Too Large)\grqq geworfen. Auf dieses Problem stößt jeder, der mit einer EC2 Instanz arbeitet und mit größeren Dateien in der EC2 Instanz arbeiten möchte.
+Mit einer \lstinline|nginx.config| in einen \lstinline|.ebextensions| kann man die Nginx Configuration anpassen. 
+Unsere Configuration passt lediglich die \lstinline|client_max_body_size| an:\\
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
 files:
   /etc/nginx/conf.d/proxy.conf:
@@ -615,7 +614,7 @@ files:
       client_max_body_size 0;
 \end{lstlisting}
 \bigskip
-\noindent Wir schreiben mit dieser Config das file in \lstinline|/etc/nginx/conf.d/proxy.conf| und setzen direkt die richtigen Rechte. Der Content wird ebenfalls in der Configuration gesetzt und beinhaltet lediglich unsere \lstinline|"client_max_body_size"|  Regel. Diese wird für uns auf 0 gesetzt und bewirkt, dass beliebig große Dateien in der EC2 Instanz hochgeladen werden können.
+\noindent Wir schreiben mit dieser Config das file in \lstinline|/etc/nginx/conf.d/proxy.conf| und setzen direkt die richtigen Rechte. Der Content wird ebenfalls in der Configuration gesetzt und beinhaltet lediglich unsere \lstinline|"client_max_body_size"|  Regel. Diese wird für uns auf 0 gesetzt und bewirkt, dass beliebig große Dateien in der EC2 Instanz behandelt werden können.
 
 
 %QUELLE NGINX
@@ -624,7 +623,7 @@ files:
 \chapter{Analyse}
 \section{Kosten}
 %umrechnen Requests auf den Nutzer. Maximalen Storage pro Nutzer enführen
-Um die etwaigen Kosten abzuschätzen haben wie den \textit{AWS-Gesamtbetriebskostenrechner} bedient. [QUELLE: KOSTENRECHNER] 
+Um die etwaigen Kosten abzuschätzen haben wie den \textit{AWS-Gesamtbetriebskostenrechner} bedient \cite{AWSc}.
 %QUELLE KOSTENRECHNER
 %https://calculator.s3.amazonaws.com
 \noindent Zur Kalkulation der Betriebskosten betrachten wir die laufenden Monatskosten für die folgenden Szenarien:\\
@@ -668,7 +667,7 @@ Damit haben wir folgende Aufrufe oder Traffic für \textbf{einen Nutzer pro Tag}
 \item Route 53 Abfragen: 110
 \end{enumerate}
 Diese Daten wurden für die weitere Berechnung pro Monat herangezogen.
-Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. [QUELLE: AWSRECHNER] Für Lambda wurde folgender Rechner genutzt. [QUELLE: LAMBDARECHNER]
+Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. Für Lambda wurde folgender Rechner genutzt \cite{dashbird}.
 \\
 
 \begin{figure}[H]
