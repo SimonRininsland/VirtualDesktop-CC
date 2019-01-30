@@ -459,28 +459,29 @@ RouteDNS:
  
 \section{Wie arbeiten die Services zusammen}
 
-Um das zusammenarbeiten der einzelnen Services zu demonstrieren, zeigen wir beispielhaft verschiedene Szenarien. Wir gehen in den einzelnen Szenarien unterschiedlich detailliert, auf die genutzten Dienste ein, um den Fokus nach unseren Wünschen zu setzen:
+Um das zusammenarbeiten der einzelnen Services zu demonstrieren, zeigen wir beispielhaft zwei Szenarien.
 \begin{itemize}
-\item Ein Nutzer logt sich mit einen Username und Passwort ein.
 \item Ein Nutzer lädt ein Bild hoch.
+\item Ein Nutzer löscht ein Desktop.
 \end{itemize}
 
-\begin{figure}[h]
+
+Sobald man einen REST Call absetzt ist der erste AWS Service, den man als Anwender nutzt, der Route53 Service, der für das Routing der Domain \textit{www.virtual-desktop.org} auf die ElasticBeanstalk Domain zuständig ist. Dieser nutzt einen LoadBalancer, um auf eine EC2 Instanz zu kommen die dann die Identität des Nutzers anhand seines Authentifizierungscookie mit Cognito überprüft. \\
+Die Anfrage des Nutzers wird nun im Nutzerkontext ausführt, falls der Cookie gesetzt und valide ist. Danach wird überprüft ob für den REST Call die benötigten Parameter korrekt gesetzt sind. \\
+Dies Schritte werden bei jedem REST Call durchgeführt. Mit Ausnahme der add-, list- und leaveWindow REST Calls werden nun die Permissions aus der Permissiosn Table der DynamoDB aufgerufen und mit den benötigten Permissions für den Call abgeglichen. Falls der Benutzer berechtigt ist wird dieser in seinen Benutzerkontext ausgeführt. Ab diesem Punkt sind weitere Aktionen REST Call abhängig. \\ \\
+Dies wird anhand folgender der Szenarien \textit{addFile} und der parallelarbeitenden \textit{removeWindow} gezeigt:
+
+\begin{figure}[H]
 \centering
-\includegraphics[scale=0.35]{Flow-Dia-1.png} 
-\caption{User logt sich ein}
+\includegraphics[scale=0.4]{AddFile-Szenario.png} 
+\caption{Ablauf eines Fileuploades}
 \end{figure}
 
-Zeitlich gesehen ist der erste AWS Service, den man als Anwender nutzt der Route53 Service, der für das Routing der Domain \textit{www.virtual-desktop.org} auf die ElasticBeanstalk Domain zuständig ist. Daraufhin wird das Frontend von der EC2 Instanz dem Nutzer geliefert. Logt der Nutzer sich ein, wird von der Applikation mit Hilfe des \textit{Cognito} Services, der jeweilige Nutzer authentifiziert. Ist die Authentifizierung erfolgreich, wird in der DynamoDB über die API die Berechtigungen und die Desktops, die der Nutzer sehen darf abgefragt. Der Nutzer bekommt daraufhin die benötigten Daten in das Frontend gerendert und sieht alle Desktops auf die er Zugriff hat. \\
-
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-\includegraphics[scale=0.6]{Flow-Dia-12.png}
-\caption{User läd ein Bild hoch}
+\includegraphics[scale=0.4]{DeleteWindow-Szenario.png}
+\caption{Ablauf des Desktop Löschens.}
 \end{figure}
-
-Das zweite Szenario beschreibt das hochladen eines Bildes auf einen Desktop. Lädt der Nutzer eine Datei in einen Desktop wird zuerst überprüft, ob er überhaupt Schreibberechtigung hat. Ist dies der Fall wird das Bild als Stream über die EC2 Instanz in den User Bucket hochgeladen. Der große Vorteil des Streams ist, dass die Datei nicht zuerst komplett in die EC2 Instanz geladen wird und von dort aus in den User Bucket geladen wird, sondern immer nur ein kleiner Teil in der EC2 Instanz liegt bevor die Datei in den User Bucket gelegt wird. Während des Uploadvorgangs bekommt der Nutzer ein Feedback, dass der Upload noch andauert. Sobald die Datei komplett auf dem S3 angekommen ist, sieht der Nutzer das Bild in den Desktop. Wird eine Datei mit der Endung \textit{jpg, jpeg oder png} in den User Bucket erstellt, wird durch ein S3 Event der Thumbnail Lambda Service gestartet und das Thumbnail wird in den \textit{thums} Bucket abgelegt. Besucht ein Nutzer nun das nächste Mal diesen Desktop sieht er das Bild mit Thumbnail auf dem Desktop.
-
 
 
 \chapter{Besonderheiten}
@@ -686,19 +687,26 @@ Für die Berechnung wurde der AWS Simply Monthly Calculator Rechner bedient. [QU
 \cline{1-4}
 \textbf{AWS Data OUT} & 9,63 USD & 969,11 USD & 543.891,11 USD &  \\
 \cline{1-4}
-\textbf{Cognito} & 0,00 USD & 0,00 USD & 4.415,00 USD &  \\ \cline{1-4}
+\textbf{Cognito} & 0,50 USD & 50,00 USD & 4.415,00 USD &  \\ \cline{1-4}
 \textbf{LAMBDA} & 0,04 USD & 4,39 USD & 4.392,00 USD &  \\ \cline{1-4}
-\textbf{Gesamt} & \textbf{15,20 USD} & \textbf{998,57 USD} & \textbf{582.070,51 USD} &  \\ \cline{1-4}
-\textbf{Kosten pro Nutzer} & 1,52 USD & 0,99 USD & 0,58 USD &  \\ \cline{1-4}
+\textbf{Gesamt} & \textbf{15,70 USD} & \textbf{1048,57 USD} & \textbf{582.070,51 USD} &  \\ \cline{1-4}
+\textbf{Kosten pro Nutzer} & 1,57 USD & 1,05 USD & 0,58 USD &  \\ \cline{1-4}
 \end{tabular}
 \end{figure}
 
+Dies ergibt folgende Kalkulation in Euro:
 \begin{enumerate}
 	\item 10 Nutzer pro Monat: 15,20 US-Dollar oder \textbf{13,30} Euro (Stand 23.01.2019)
-	\item 1000 Nutzer pro Monat: 998,57 US-Dollar oder \textbf{873,75} Euro (Stand 23.01.2019)
+	\item 1000 Nutzer pro Monat: 1048,57 US-Dollar oder \textbf{923,75} Euro (Stand 23.01.2019)
 	\item 1000000 Nutzer pro Monat: 582.070,51 US-Dollar oder \textbf{509.311,70 Euro} (Stand 23.01.2019) 
 \end{enumerate}
 
+Es entsteht folgender Traffic aus der AWS zu den Nutzer:
+\begin{enumerate}
+	\item 10 Nutzer pro Monat: 53940 MB = 53,94 GB
+	\item 1000 Nutzer pro Monat: 5394000 MB = 5394 GB = 5,394 TB
+	\item 1000000 Nutzer pro Monat: 5394000000 MB = 5394000 GB = 5394 TB = 5,394 PB
+\end{enumerate}
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.8]{costs-overview.png}
@@ -738,7 +746,8 @@ Folgende Punkte bieten Ausbaupotential:
 \begin{itemize}
 \item Wir haben eine eigene EC2 Instanz auf einen ElasticBeanstalk anstatt Lambda Funktionen gewählt, auch weil wir vor hatten Sockets zu implementieren. Diese Sockets würden den Nutzer die Möglichkeit geben Änderungen auf einen geteilten Desktop live zu sehen. 
 \item Dank unserer vorausschauenden Programmierstruktur, haben wir die Funktionen die aufgerufen werden können wie, Auflisten der Elemente im Desktop, Auflisten der verschiedenen Desktops usw. möglichst weit gekapselt. Dadurch wäre der komplette Umbau auf Lambda theoretisch möglich. Dennoch würden wir keinen kompletten Umstieg auf Lambda empfehlen, da es auch Gründe gibt die bei manchen Funktionen dagegen spricht. Wie zum Beispiel das feste Lambda-Limit der Zeitüberschreitung von 15 Minuten. Ein Up- oder Download bei großen Dateien kann aber auch über 15 Minuten dauern und würde dann zum Abbruch führen.
-\item Ein relativ einfaches Feature, dass man hinzufügen könnte wäre das hinzufügen eines SSL Zertifikates zu der EC2 Instanz beziehungsweise zum Route53 Service, um das Surfen über verschlüsselte Aufrufe über https zu ermöglichen. 
+\item Ein relativ einfaches Feature, dass man hinzufügen könnte wäre das hinzufügen eines SSL Zertifikates zu der EC2 Instanz beziehungsweise zum Route53 Service, um das Surfen über verschlüsselte Aufrufe über https zu ermöglichen.
+\item Zurzeit löscht der Lambda Service die gerenderten Bilder nicht wieder aus den ThumBucket heraus. Dies als Funktion hinzuzufügen, würde ebenfalls geringere S3 Kosten bedeuten.
 \item Gerade bei der Kostenoptimierung wäre ein direkter Zugriff auf die S3 Daten von Vorteil. Wie man in unserer Übersicht der Betriebskosten sieht ist dieses \emph{durchschleusen} ein großer Kostenfaktor. AWS bietet an mit speziellen \glqq Whitelist\grqq  Cookies Nutzer direkt auf die S3 Daten zugreifen zu lassen, auch bei Streams.
 \item Ein weitere Idee die Kosten zu verringern, wäre die Nutzerdaten auf keinen S3-Bucket zu lagern sondern auf den AWS-Glacier. Dieser verspricht geringere Kosten bei vielen Datenmengen.
 \item Auch das verlagern des Thumbnailservices in die ständig laufenden EC2 Instanzen würden die Kosten für den Lambda Service einsparen.
