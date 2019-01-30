@@ -162,7 +162,7 @@ Für dieses Projekt fiel die Entscheidung auf AWS von Amazon.
 \chapter{Architektur}
 % Clouformation ansprechen
 % Hier wie deploye ich rein
-Um in AWS seinen Service Stack zu persistieren haben wir \textit{Clouformation} genutzt. In \textit{Cloudformation} wird anhand einer template Datei der Stack in yml oder json beschrieben. \\
+Um in AWS seinen Service Stack zu persistieren haben wir \textit{Clouformation} genutzt. In \textit{Cloudformation} wird anhand einer template Datei der Stack in JSON oder YAML beschrieben. Innerhalb dieses Projektes wird YAML verwendet.\\
 Wie bereits in den Anforderungen beschrieben, haben wir uns als Ziel gesetzt den gesamten Service Stack mit einen Befehl ausrollen zu können. Der Befehl mit den Parametern wird im setup Ordner ausgeführt und ist folgender:
 
 \bigskip
@@ -188,7 +188,7 @@ Dieser Aufruf wird nach dem ausführen des deployment Scripts mit den bereits au
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.4]{ArchiDiagram.png} 
-\caption{Architekturdiagramm Virtual-Desktop}
+\caption{Architekturdiagramm VirtualDesktop}
 \end{figure}
 
 \noindent Im folgenden Abschnitten werden die einzelnen Services und deren Konfiguration in \textit{Cloudformation} beschrieben. 
@@ -317,8 +317,9 @@ Auch die S3-Buckets haben in AWS eine automatische Skalierung inne. Sowohl in de
 %das hier umformulieren? beliebig skalierbare Datenspeicher, Bandbreite? Umstände?
 
 \section{Datenbank DynamoDB}
+\label{db}
 %etwas genauer sagen wieso dynamodb statt sql für daten
-Aufgrund der Architektur der Applikation und der Festlegung die Infrastruktur in der Cloud laufen zu lassen, kam für uns nur eine NOSQL Datenbank wie DynamoDB in Frage. Eine SQL Datenbank, wäre für unseren Einsatz zwar möglich, würde aber nur zusätzliche Komplexität und Einschränkungen mit sich bringen. \\
+Aufgrund der Architektur der Applikation und der Festlegung die Infrastruktur in der Cloud laufen zu lassen, kam für uns nur eine NoSQL- Datenbank wie DynamoDB in Frage. Da den Anforderungen nach von großen Nutzerzahlen ausgegangen wird, ist es sinnvoll eine NoSQL für die Anwendungsdaten zu verwenden. Für die Berechtigungsdaten könnte in der Regel eine SQL-Datenbank in betracht gezogen werden, jedoch ist der Durchsatz für die Berechtigungstabelle höher einzuschätzen, da diese für jeden Ressourcenaufruf mit Ausnahme von \textit{createWindow} abgefragt werden muss. Daher ist die Verwendung einer NoSQL-Datenbank auch für die Berechtigungsdaten notwendig.\\
 Das Erstellung einer Datenbanktabelle in der DynamoDB wird hier exemplarisch an der \textit{Permissions}-Tabelle vom Typ \textit{AWS::DynamoDB::Table} gezeigt. Anders als bei klassischen SQL-Datenbanken kann ein Eintrag in einer DynamoDB-Tabelle beliebige Felder beinhalten. Diese werden lediglich über den Schlüssel abgefragt. Um den Schlüssel einer Tabelle zu definieren muss der \textit{AttributeType}, der \textit{AttributeName} und der \textit{KeyType} innerhalb der \textit{AttributeDefinitions} und \textit{KeySchema} angegeben werden. Diese beiden Felder sind erforderlich, müssen also angegeben werden. Das selbe gilt für \textit{ProvisionedThroughput} \cite{AWSDa}.
 Dies bedeutet, dass die Skalierung nicht bei der Erstellung durch CloudFormation oder EBS eingestellt werden werden. Um die DynamoDB zu skalieren muss \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} im AWS-Account aktiv sein. Falls \textit{AWSServiceRoleForApplicationAutoScaling\_DynamoDBTable} bereits bei der Erstellung durch EB-Deploy aktiviert war skalieren die Tabellen,  ansonsten nicht. Das Autoscaling für die Tabellen kann dann jedoch nachträglich über die Management-Console eingestellt werden. Nähere Informationen hierzu sind in \cite{AWSDb} zu finden.
 \\[0.5cm]
@@ -597,6 +598,28 @@ bytes=x-y
 %QUELLE: Range,206 723
 %https://www.rfc-editor.org/rfc/rfc7233.txt 
 
+\section{Nginx Configuration}
+
+In AWS hat der Nginx in jeder EC2 Instanz eine Standardkonfiguration. Diese Standard Configuration setzt zum Beispiel mit \lstinline|/client_max_body_size 1m;| \cite{NGINX} die maximale Dateigröße zur Kommunikation auf 1MB.\\
+Lädt man nun Dateien in den ElasticBeanstalk bzw. auf die EC2 Instanz hoch oder hinunter, wird ein \glqq413 (Request Entity Too Large)\grqq geworfen. Auf dieses Problem stößt jeder, der mit einer EC2 Instanz arbeitet und mit größeren Dateien in der EC2 Instanz arbeiten möchte.
+Mit einer \lstinline|/nginx.config| in einen \lstinline|/.ebextensions| kann man die Nginx Configuration anpassen. 
+Unsere Configuration passt lediglich die \lstinline|/client_max_body_size| an:\\
+\begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
+files:
+  /etc/nginx/conf.d/proxy.conf:
+    mode: "000644"
+    owner: root
+    group: root
+    content: |
+      client_max_body_size 0;
+\end{lstlisting}
+\bigskip
+\noindent Wir schreiben mit dieser Config das file in \lstinline|/etc/nginx/conf.d/proxy.conf| und setzen direkt die richtigen Rechte. Der Content wird ebenfalls in der Configuration gesetzt und beinhaltet lediglich unsere \lstinline|"client_max_body_size"|  Regel. Diese wird für uns auf 0 gesetzt und bewirkt, dass beliebig große Dateien in der EC2 Instanz behandelt werden können.
+
+
+%QUELLE NGINX
+%https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+
 \chapter{Analyse}
 \section{Kosten}
 %umrechnen Requests auf den Nutzer. Maximalen Storage pro Nutzer enführen
@@ -705,6 +728,7 @@ Weitaus interessanter ist die Entwicklung der Kosten pro Nutzer. Auch wenn der K
 \section{Skalierung}
 Die Services Route53, Cognito, DynamoDB, S3 und Lambda skalieren grundsätzlich beliebig, lediglich die Wirtschaftlichkeit des verwendeten Service Elastic Beanstalk ist von der Implementierung der Geschäftslogik abhängig. Um die Geschäftslogik wirtschaftlich zu halten müssen möglichst viele Nutzer von einer einzelnen EC2-Instanz die von EBS instanziiert wird verarbeitet werden. Um eine größere Nutzerzahl zu gewährleisten wurde der Up- und Download-Streaming wie in \ref{updown} beschrieben implementiert, denn ohne Streaming würde der Arbeitsspeicher für gecachte Dateien dafür sorgen weitere EC2-Instanzen durch EBS auszuführen.
 Um weiterhin genutzte Ports auf dem Webserver zu reduzieren wurde zu dem der Dispatcher wie in \ref{dispatcher} beschrieben entwickelt. Dieser sorgt dafür, dass parallelisierbare Aufgaben parallel ausgeführt werden können. Dadurch ist die Belegungszeit für den Port geringer.\\
+Wie bereits erwähnt ist die DynamoDB im Gegensatz zu einer SQL-Datenbank beliebig skalierbar. Dieser Vorteil wird für die \textit{Permissions}-Tabellen genutzt wie in \ref{db} beschrieben.
 
    
 
