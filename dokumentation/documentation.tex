@@ -600,10 +600,10 @@ bytes=x-y
 
 \section{Nginx Configuration}
 
-In AWS hat der Nginx in jeder EC2 Instanz eine Standardkonfiguration. Diese Standard Configuration setzt zum Beispiel mit \lstinline|/client_max_body_size 1m;| \cite{NGINX} die maximale Dateigröße zur Kommunikation auf 1MB.\\
-Lädt man nun Dateien in den ElasticBeanstalk bzw. auf die EC2 Instanz hoch oder hinunter, wird ein \glqq413 (Request Entity Too Large)\grqq geworfen. Auf dieses Problem stößt jeder, der mit einer EC2 Instanz arbeitet und mit größeren Dateien in der EC2 Instanz arbeiten möchte.
-Mit einer \lstinline|/nginx.config| in einen \lstinline|/.ebextensions| kann man die Nginx Configuration anpassen. 
-Unsere Configuration passt lediglich die \lstinline|/client_max_body_size| an:\\
+In AWS hat der Nginx in jeder EC2 Instanz eine Standardkonfiguration. Diese Standard Configuration setzt zum Beispiel mit \lstinline|"client_max_body_size 1m;"| \cite{NGINX} die maximale Dateigröße des Bodys, also die hochzuladende Dateigröße, auf 1MB.\\
+Lädt man nun Dateien in den ElasticBeanstalk bzw. auf die EC2 Instanz hoch, wird ein \lstinline|"413 (Request Entity Too Large)"| geworfen. Auf dieses Problem stößt jeder, der mit einer EC2 Instanz arbeitet und größere Dateien in die EC2 Instanz hochladen möchte.
+Mit einer \lstinline|"nginx.config"| in einen \lstinline|".ebextensions"| Ordner kann man die Nginx Configuration anpassen. 
+Unsere Configuration passt lediglich die \lstinline|"client_max_body_size"| an:\\
 \begin{lstlisting}[xleftmargin=\parindent,numbers=left,numberstyle=\small,numbersep=8pt,frame=L,mathescape=true, basicstyle=\small, language=Java, lineskip={1.0pt}]
 files:
   /etc/nginx/conf.d/proxy.conf:
@@ -614,7 +614,7 @@ files:
       client_max_body_size 0;
 \end{lstlisting}
 \bigskip
-\noindent Wir schreiben mit dieser Config das file in \lstinline|/etc/nginx/conf.d/proxy.conf| und setzen direkt die richtigen Rechte. Der Content wird ebenfalls in der Configuration gesetzt und beinhaltet lediglich unsere \lstinline|"client_max_body_size"|  Regel. Diese wird für uns auf 0 gesetzt und bewirkt, dass beliebig große Dateien in der EC2 Instanz behandelt werden können.
+\noindent Wir schreiben mit dieser Config das file in \lstinline|/etc/nginx/conf.d/proxy.conf| und setzen direkt die richtigen Rechte. Der Content wird ebenfalls in der Configuration gesetzt und beinhaltet lediglich unsere \lstinline|"client_max_body_size"|  Regel. Diese wird für uns auf 0 gesetzt und bewirkt, dass beliebig große Dateien in der EC2 Instanz hochgeladen werden können.
 
 
 %QUELLE NGINX
